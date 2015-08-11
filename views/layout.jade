@@ -1,7 +1,7 @@
 doctype html
 html
     include head
-        body(role='developer')
+        body
             block header
                 .navbar.navbar-default.navbar-static-top(role='navigation')
                     .container
@@ -24,10 +24,6 @@ html
                                         a Welcome, Guest
                             block details
             block content
-                div(id='searchDiv')
-                    block search
-                div(id='resultsDiv')
-                    block table
             block footer
                     - var getYear = function () {
                     -   return new Date().getFullYear();

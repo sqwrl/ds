@@ -5,13 +5,13 @@
 var config      = require('config').login;
 
 function index(req, res) {
-    res.render('signin');
+    res.render('signin', {title:'Login'});
 }
 
 function login(req, res) {
     if (req.body.emailId === config.username && req.body.password === config.password) {
         req.session.userName = config.username;
-        res.redirect('/main');
+        res.send('');
     } else {
         res.send("Wrong credentials!!");
     }

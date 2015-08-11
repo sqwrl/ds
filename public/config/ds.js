@@ -154,4 +154,6 @@ function getFieldTypes(index, type) {
     }
 }
 
-exports.config = config;
+if (typeof module !== 'undefined' && module.exports) {
+    exports.config = config;
+}

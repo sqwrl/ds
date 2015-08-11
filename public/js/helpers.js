@@ -13,9 +13,23 @@ var notificationClassName = {
 function login() {
     if (validateLogin()) {
         $.ajax({
-            url : '/signin/login',
-            type : 'POST',
+            url: '/signin/login',
+            type: 'POST',
             data: jsonInput
+        }).done(function(data) {
+            if (data && data.length > 0) {
+                showNotification({
+                    'status' : 'info',
+                    'message' : data
+                });
+            } else {
+                $(location).attr('href', '/main');
+            }
+        }).fail(function(jqXHR, textStatus) {
+            showNotification({
+                'status' : 'error',
+                'message' : textStatus
+            });
         });
         clearJSON();
     }

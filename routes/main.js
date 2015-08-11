@@ -5,11 +5,10 @@
 var config      = require('config'),
     request     = require('request'),
     _           = require('lodash'),
-    logger      = global.logger,
-    empty       = { data: [] };
+    logger      = global.logger;
 
 function index(req, res) {
-    res.render('main');
+    res.render('main', {title:'Shop!'});
 }
 
 function shop (req, res) {

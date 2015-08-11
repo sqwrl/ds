@@ -1,0 +1,63 @@
+block variables
+    title= 'DataShopper - Shop!'
+
+extends layout
+
+block search
+    div.container-fluid
+        div.row
+            div.col-sm-3.col-md-2.sidebar
+                ul.nav.nav-sidebar
+                    li
+                        | facet 1
+                    li
+                        | facet 2
+                    li
+                        | facet 3
+                ul.nav.nav-sidebar
+                    li
+                        | facet 4
+                    li
+                        | facet 5
+                    li
+                        | facet 6
+            div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+                script(type='text/javascript').
+                    $(document).ready(function () {
+                        manageIndexDropDowns();
+                    });
+                    var fetchData = function () {
+                        updateResults({
+                            indexName: $('#indexName').prop('name'),
+                            indexType: $('#indexType').prop('name'),
+                            indexField: $('#indexFieldBtnText').text(),
+                            strSearch: $('#strSearch').val()
+                        });
+                    };
+                span
+                    span.dropwdown
+                        button.btn-sm.btn-primary.dropdown-toggle.selIndex(id='indexName', name='index', type='button' data-toggle='dropdown')
+                            span(id='indexNameBtnText') Sub System
+                        span.caret
+                        ul.dropdown-menu(id='indexNameMenu')
+                    span.dropwdown
+                        button.btn-sm.btn-info.dropdown-toggle.selType(id='indexType', name='type', type='button' data-toggle='dropdown')
+                            span(id='indexTypeBtnText') Information Type
+                        span.caret
+                        ul.dropdown-menu(id='indexTypeMenu')
+                    span.dropwdown
+                        button.btn-sm.btn-warning.dropdown-toggle.selField(id='indexField', name='field', type='button' data-toggle='dropdown')
+                            span(id='indexFieldBtnText') Field
+                        span.caret
+                        ul.dropdown-menu(id='indexFieldMenu')
+                    input.form-control(id='strSearch', name='strSearch', type='text', placeholder='Enter your search here...', enabled='false')
+                    button.btn-sm.btn-success#submit(onclick='fetchData()') Shop!
+
+block table
+    div.container-fluid
+        div.row
+            div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+                table.table.table-responsive.table-striped(id='results')
+
+
+

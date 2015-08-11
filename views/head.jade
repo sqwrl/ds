@@ -1,0 +1,14 @@
+block variables
+    - var title = title || 'Data Shopper'
+    title #{title}
+
+block css
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    link(rel='stylesheet', href='/css/bootstrap.min.css')
+    link(rel='stylesheet', href='/css/style.css')
+    link(rel='stylesheet', href='/css/dashboard.css')
+block js
+    script(type='text/javascript', src='/js/jquery-2.1.4.min.js')
+    script(type='text/javascript', src='/js/bootstrap.min.js')
+    script(type='text/javascript', src='/js/helpers.js')
+    script(type='text/javascript', src='/config/ds.js')

@@ -1,0 +1,27 @@
+# Default configuration
+
+# Logging
+log:
+  logLevel: info
+  logPath: /var/log/ds
+  includeSource: true
+
+# Login
+login:
+  username: admin
+  password: pw
+
+# Elasticsearch
+es:
+  server: http://localhost:9200
+
+# Website
+web:
+  port: 15093
+  session:
+    secret: o56ieyrjsfgxcmh9vjkio
+    resave: true
+    saveUninitialized: true
+  publicFolder: public
+  favicon: /public/images/favicon.ico
+  logo: /images/sqwrl-logo.png

@@ -1,0 +1,21 @@
+block variables
+    title= 'DataShopper - Login'
+
+extends layout
+
+block content
+    div(align='center')
+        script(type='text/javascript').
+            var doLogin = function() {
+                addToJSON( { 'id':'emailId', 'value':$('#emailId').val() } );
+                addToJSON( { 'id':'password', 'value':$('#password').val() } );
+                login();
+            };
+        div(style='width:30%')
+            b
+                div#notification
+            input.form-control#emailId(placeholder='Email Address')
+            br
+            input.form-control#password(type='password',placeholder='Password')
+            br
+            button.btn.btn-primary.btn-block#submit(onclick='doLogin()') Login

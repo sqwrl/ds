@@ -97,7 +97,7 @@ function doSearch(params, res, callback) {
                 logger.error(err, 'ERROR: doSearch');
                 callback(err, {});
             } else {
-                var results = formatSearchResultsForTable(body, facets);
+                var results = formatSearchResultsForTable(body, facets, params);
                 callback(null, results);
             }
         });
@@ -106,7 +106,7 @@ function doSearch(params, res, callback) {
 /**
  * Process the data into html
  */
-function formatSearchResultsForTable(data, facets) {
+function formatSearchResultsForTable(data, facets, params) {
     // TODO: order columns
     // TODO: add header fixation
     // TODO: add columns to fix
@@ -173,23 +173,34 @@ function formatSearchResultsForTable(data, facets) {
      * Generate the facets html
      */
     var streamFacets = '';
+    var eventHandlers = [];
     for (var f=0; f < facets.length; f++) {
         if (typeof facetsData[facets[f]] === 'object') {
             var buckets = facetsData[facets[f]].buckets;
-            streamFacets += '<li class="h5">' + facets[f];
+            streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] +'">' + facets[f];
             for (var b=0; b < buckets.length; b++) {
+                var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ','*');
+                eventHandlers.push(id);
                 streamFacets += '<div class="checkbox">';
-                streamFacets += '<label><input type="checkbox" value="' + buckets[b].key + '">' + buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
-                streamFacets += '</div><li>';
+                streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
+                streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
+                streamFacets += '</div>';
             }
+            streamFacets += '</li><br>';
         }
-        streamFacets += '<br>';
     }
 
-
+    // add click event handlers
+    streamFacets += '<script>';
+    streamFacets += '$("#facets").find("input").click( function(e) { updateResultsWithFilter(e) });';
+    streamFacets += '</script>';
     results['facets'] = streamFacets;
 
     return results;
+}
+
+function addClickEventHandler(selector) {
+    return selector + '.click( function(e) { updateResultsWithFilter(e);});';
 }
 
 exports.index = index;

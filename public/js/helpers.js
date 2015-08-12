@@ -162,3 +162,53 @@ function updateResults(index) {
     });
 
 }
+
+function updateResultsWithFilter(e) {
+    var index = '';
+    var type = '';
+    // loop through the facets and capture the state
+    var state = [];
+    var addedFieldValue = false;
+    var fieldObject = {};
+    var facets = $("#facets").find("li");
+    for (var f=0; f < facets.length; f++) {
+        var facet = facets[f];
+        if (f === 0) {
+            var id = $(facet).prop('id');
+            var firstIdx = id.indexOf('-');
+            index = id.substring(0, firstIdx);
+            type = id.substring(id.indexOf('-') + 1, id.length);
+            state = {
+                index: index,
+                name: type,
+                fields: []
+            };
+        }
+        for (var n=0; n < facet.childNodes.length; n++) {
+            var node = facet.childNodes[n];
+            if (n === 0) {
+                fieldObject = {
+                    field: node.data,
+                    values: []
+                };
+                state.fields.push(fieldObject);
+                addedFieldValue = false;
+            } else {
+                var input = $(node).find('input');
+                var idCb = $(input).prop('id');
+                switch ($(input).prop('type')) {
+                    case 'checkbox':
+                        if ($(input).prop('checked')) {
+                            state.fields[state.fields.length - 1].values.push(idCb.substr(idCb.lastIndexOf('-') + 1));
+                            addedFieldValue = true;
+                        }
+                }
+            }
+        }
+        if (!addedFieldValue) {
+            // remove the field node as we don't need to filter on it
+            state.fields.pop();
+        }
+    }
+    console.log(state);
+}

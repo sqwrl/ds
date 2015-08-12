@@ -155,7 +155,8 @@ function updateResults(index) {
         url: '/main/shop',
         data: index
     }).done(function(data) {
-        $('#results').html(data.html);
+        $('#results').html(data.table);
+        $('#facets').html(data.facets);
     }).fail(function(jqXHR, textStatus) {
         $('#results').html(textStatus);
     });

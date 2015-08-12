@@ -2,15 +2,22 @@
  * Created by sqwrl on 8/7/15.
  */
 
-var config      = require('config'),
-    request     = require('request'),
-    _           = require('lodash'),
-    logger      = global.logger;
+var config          = require('config'),
+    request         = require('request'),
+    _               = require('lodash'),
+    clientConfig    = require('./../public/config/ds').config.index,
+    logger          = global.logger;
 
+/**
+ * Main page rendering entry
+ */
 function index(req, res) {
     res.render('main', {title:'Shop!'});
 }
 
+/**
+ * Function called from client to do fetch the data
+ */
 function shop (req, res) {
     if (req.query.indexName && req.query.indexType) {
         logger.debug(req.query.indexName, 'shop: index');
@@ -35,6 +42,9 @@ function shop (req, res) {
 
 }
 
+/**
+ * Formulate the elasticsearch request, initiate data processing, and send back to the client
+ */
 function doSearch(params, res, callback) {
 
     var path = config.es.server + '/';
@@ -53,7 +63,6 @@ function doSearch(params, res, callback) {
     }
 
     // load the facets
-    var clientConfig = require('./../public/config/ds').config.index;
     var facets = [];
     _.find(clientConfig, function (index) {
         if (index.name === params[0]) {
@@ -88,30 +97,37 @@ function doSearch(params, res, callback) {
                 logger.error(err, 'ERROR: doSearch');
                 callback(err, {});
             } else {
-                var results = formatSearchResultsForTable(body);
+                var results = formatSearchResultsForTable(body, facets);
                 callback(null, results);
             }
         });
     }
 
-// TODO: order columns
-// TODO: add header fixation
-// TODO: add columns to fix
-function formatSearchResultsForTable(data) {
+/**
+ * Process the data into html
+ */
+function formatSearchResultsForTable(data, facets) {
+    // TODO: order columns
+    // TODO: add header fixation
+    // TODO: add columns to fix
     var results = {};
-    var stream = '';
-    var facets = [];
+    var streamTable = '';
+    var facetsData = data.aggregations;
+
+    /**
+     * Generate the table html
+     */
     var noData = '\<tr\>\<td\>There are no results\<\/tr\>\<\/td\>';
     if (data.error === undefined && data.hits.hits.length > 0) {
         var columnHeaders = [];
         var rows = data.hits.hits;
 
         // create the html table
-        stream += '\<table\>';
+        streamTable += '\<table\>';
 
         // when there is data
-        stream += '\<thead\>';
-        stream += '\<tr\>';
+        streamTable += '\<thead\>';
+        streamTable += '\<tr\>';
         // generate the column headers
         var column = rows[0];
         _.each(column._source, function (o, row) {
@@ -120,42 +136,58 @@ function formatSearchResultsForTable(data) {
 
         // add each column
         _.each(columnHeaders, function (column) {
-            stream += '\<th\>';
-            stream += column;
-            stream += '\</th\>';
+            streamTable += '\<th\>';
+            streamTable += column;
+            streamTable += '\</th\>';
         });
-        stream += '\<tr\/\>';
-        stream += '\<\/thead\>';
+        streamTable += '\<tr\/\>';
+        streamTable += '\<\/thead\>';
 
         // add each row
-        stream += '\<tbody\>';
+        streamTable += '\<tbody\>';
         _.each(rows, function(row) {
-            stream += '\<tr\>';
+            streamTable += '\<tr\>';
             _.forEach(row._source, function(f, field) {
                 if (typeof f !== 'object') {
-                    stream += '\<td\>' + f + '\<\/td\>';
+                    streamTable += '\<td\>' + f + '\<\/td\>';
                 } else {
                     // TODO: add class for sub-table icon functionality and add hidden row(s) with sub-table format
-                    stream += '\<td\>' + field + '\<\/td\>';
+                    streamTable += '\<td\>' + field + '\<\/td\>';
                 }
             });
-            stream += '\<\/tr\>';
-            stream += '\<\/tbody\/\>';
+            streamTable += '\<\/tr\>';
+            streamTable += '\<\/tbody\/\>';
         });
-
-        // assign that facet information
-        facets = data.aggregations;
     } else {
         if (data.error !== undefined) {
             logger.error(data.error, 'ERROR: formatSearchResultsForTable');
-            stream += '\<tr\>\<td\>\"' + data.error + '\"\<\/tr\>\<\/td\>';
+            streamTable += '\<tr\>\<td\>\"' + data.error + '\"\<\/tr\>\<\/td\>';
         } else {
-            stream += noData;
+            streamTable += noData;
         }
     }
 
-    results['html'] = stream;
-    results['facets'] = facets;
+    results['table'] = streamTable;
+
+    /**
+     * Generate the facets html
+     */
+    var streamFacets = '';
+    for (var f=0; f < facets.length; f++) {
+        if (typeof facetsData[facets[f]] === 'object') {
+            var buckets = facetsData[facets[f]].buckets;
+            streamFacets += '<li class="h5">' + facets[f];
+            for (var b=0; b < buckets.length; b++) {
+                streamFacets += '<div class="checkbox">';
+                streamFacets += '<label><input type="checkbox" value="' + buckets[b].key + '">' + buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
+                streamFacets += '</div><li>';
+            }
+        }
+        streamFacets += '<br>';
+    }
+
+
+    results['facets'] = streamFacets;
 
     return results;
 }

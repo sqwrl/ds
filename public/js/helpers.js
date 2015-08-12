@@ -149,30 +149,33 @@ function manageIndexDropDowns() {
 }
 
 function updateResults(index) {
-
-    $.ajax({
-        method: 'GET',
-        url: '/main/shop',
-        data: index
-    }).done(function(data) {
-        $('#results').html(data.table);
-        $('#facets').html(data.facets);
-    }).fail(function(jqXHR, textStatus) {
-        $('#results').html(textStatus);
-    });
-
+    if (index.indexName !== 'index') {
+        $.ajax({
+            method: 'GET',
+            url: '/main/shop',
+            data: index
+        }).done(function (data) {
+            $('#results').html(data.table);
+            $('#facets').html(data.facets);
+        }).fail(function (jqXHR, textStatus) {
+            $('#results').html(textStatus);
+        });
+    }
 }
 
-function updateResultsWithFilter(e) {
+function updateResultsWithFilter() {
+
+    // loop through the facets and capture the state
     var index = '';
     var type = '';
-    // loop through the facets and capture the state
     var state = [];
     var addedFieldValue = false;
     var fieldObject = {};
+    // get all the UI facets
     var facets = $("#facets").find("li");
     for (var f=0; f < facets.length; f++) {
         var facet = facets[f];
+        // only 1x capture the index and type so that we know how to resubmit the search
         if (f === 0) {
             var id = $(facet).prop('id');
             var firstIdx = id.indexOf('-');
@@ -180,12 +183,14 @@ function updateResultsWithFilter(e) {
             type = id.substring(id.indexOf('-') + 1, id.length);
             state = {
                 index: index,
-                name: type,
+                type: type,
                 fields: []
             };
         }
+        // loop through the checkboxes
         for (var n=0; n < facet.childNodes.length; n++) {
             var node = facet.childNodes[n];
+            // the first node is the title of the checkbox list: create the field in the state object
             if (n === 0) {
                 fieldObject = {
                     field: node.data,
@@ -194,6 +199,7 @@ function updateResultsWithFilter(e) {
                 state.fields.push(fieldObject);
                 addedFieldValue = false;
             } else {
+                // capture only those values that need to be used for the filter query
                 var input = $(node).find('input');
                 var idCb = $(input).prop('id');
                 switch ($(input).prop('type')) {
@@ -206,9 +212,17 @@ function updateResultsWithFilter(e) {
             }
         }
         if (!addedFieldValue) {
-            // remove the field node as we don't need to filter on it
+            // remove the field node as we don't need to filter on it since no values are selected
             state.fields.pop();
         }
     }
-    console.log(state);
+
+    // submit another search with the selected filters
+    updateResults({
+        indexName: state.index,
+        indexType: state.type,
+        indexField: $('#indexFieldBtnText').text(),
+        strSearch: $('#strSearch').val(),
+        filters: JSON.stringify(state)
+    });
 }

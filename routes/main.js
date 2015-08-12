@@ -24,7 +24,7 @@ function shop (req, res) {
         logger.debug(req.query.indexType, 'shop: type');
         logger.debug(req.query.indexField, 'shop: field');
         logger.debug(req.query.strSearch, 'shop: for');
-        var params = [req.query.indexName, req.query.indexType, req.query.indexField, req.query.strSearch];
+        var params = [req.query.indexName, req.query.indexType, req.query.indexField, req.query.strSearch, req.query.filters];
 
         var callback = function (err, results) {
             if (err) {
@@ -47,19 +47,30 @@ function shop (req, res) {
  */
 function doSearch(params, res, callback) {
 
+    var filtered = JSON.parse(params[4]);
+    var applyFilter = (filtered.fields.length > 0);
+
     var path = config.es.server + '/';
     path += params[0];
     path += (params[1] !== '') ? '/' + params[1] : '';
     path += '/_search';
-    logger.info(path, 'doSearch path');
+    logger.debug(path, 'doSearch path');
 
     var q = {};
     switch (params[3]) {
         case '':
-            q = JSON.parse('{\"query\":{\"match_all\":{}},\"aggs\":{}}');
+            if (applyFilter) {
+                q = JSON.parse('{\"query\":{\"filtered\":{\"query\":{\"match_all\":{}},\"filter\":{}}},\"aggs\":{}}');
+            } else {
+                q = JSON.parse('{\"query\":{\"match_all\":{}},\"aggs\":{}}');
+            }
             break;
         default:
-            q = JSON.parse('{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"aggs\":{}}');
+            if (applyFilter) {
+                q = JSON.parse('{\"query\":{\"filtered\":{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"filter\":{}}},\"aggs\":{}}');
+            } else {
+                q = JSON.parse('{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"aggs\":{}}');
+            }
     }
 
     // load the facets
@@ -81,9 +92,41 @@ function doSearch(params, res, callback) {
     }
 
     // assign the object to aggs
-    q.aggs = facetObject;
+    if (applyFilter) {
+        q.aggs = facetObject;
 
-    logger.info(q, 'doSearch query');
+        // generate the filter format
+        var filterObj = {
+            "bool": {
+                "must": []
+            }
+        };
+        for (var fl=0; fl < filtered.fields.length; fl++) {
+            var field = filtered.fields[fl];
+            if (field.values.length === 1) {
+                filterObj.bool.must.push(
+                    JSON.parse('{"term":{"' + field.field + '":"' + field.values[0] + '"}}')
+                );
+            } else {
+                var valueList = '';
+                for (var v=0; v < field.values.length; v++) {
+                    valueList += '\"' + field.values[v] + '\"';
+                    if (v !== field.values.length - 1) {
+                        valueList += ',';
+                    }
+                }
+                filterObj.bool.must.push(
+                    JSON.parse('{"terms":{"' + field.field + '":[' + valueList + ']}}')
+                );
+            }
+        }
+        q.query.filtered.filter = filterObj;
+
+    } else {
+        q.aggs = facetObject;
+    }
+
+    logger.debug(q, 'doSearch query');
 
     request({
         method: 'POST',
@@ -109,7 +152,7 @@ function doSearch(params, res, callback) {
 function formatSearchResultsForTable(data, facets, params) {
     // TODO: order columns
     // TODO: add header fixation
-    // TODO: add columns to fix
+    // TODO: add # of left columns to fix
     var results = {};
     var streamTable = '';
     var facetsData = data.aggregations;
@@ -172,29 +215,33 @@ function formatSearchResultsForTable(data, facets, params) {
     /**
      * Generate the facets html
      */
-    var streamFacets = '';
-    var eventHandlers = [];
-    for (var f=0; f < facets.length; f++) {
-        if (typeof facetsData[facets[f]] === 'object') {
-            var buckets = facetsData[facets[f]].buckets;
-            streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] +'">' + facets[f];
-            for (var b=0; b < buckets.length; b++) {
-                var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ','*');
-                eventHandlers.push(id);
-                streamFacets += '<div class="checkbox">';
-                streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
-                streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
-                streamFacets += '</div>';
+    // only generate the facets for display if no filters are defined
+    var filtered = JSON.parse(params[4]);
+    if (filtered.fields.length === 0) {
+        var streamFacets = '';
+        var eventHandlers = [];
+        for (var f = 0; f < facets.length; f++) {
+            if (typeof facetsData[facets[f]] === 'object') {
+                var buckets = facetsData[facets[f]].buckets;
+                streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '">' + facets[f];
+                for (var b = 0; b < buckets.length; b++) {
+                    var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
+                    eventHandlers.push(id);
+                    streamFacets += '<div class="checkbox">';
+                    streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
+                    streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
+                    streamFacets += '</div>';
+                }
+                streamFacets += '</li><br>';
             }
-            streamFacets += '</li><br>';
         }
-    }
 
-    // add click event handlers
-    streamFacets += '<script>';
-    streamFacets += '$("#facets").find("input").click( function(e) { updateResultsWithFilter(e) });';
-    streamFacets += '</script>';
-    results['facets'] = streamFacets;
+        // add click event handlers
+        streamFacets += '<script>';
+        streamFacets += '$("#facets").find("input").click( function(e) { updateResultsWithFilter(e) });';
+        streamFacets += '</script>';
+        results['facets'] = streamFacets;
+    }
 
     return results;
 }

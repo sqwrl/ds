@@ -16,7 +16,8 @@ block content
                                 indexName: $('#indexName').prop('name'),
                                 indexType: $('#indexType').prop('name'),
                                 indexField: $('#indexFieldBtnText').text(),
-                                strSearch: $('#strSearch').val()
+                                strSearch: $('#strSearch').val(),
+                                filters: JSON.stringify({fields: [] })
                             });
                         };
                     span

@@ -1,5 +1,11 @@
 extends layout
 
+append js
+    script(type='text/javascript', src='/js/export/xlsx.core.min.js')
+    script(type='text/javascript', src='/js/export/Blob.js')
+    script(type='text/javascript', src='/js/export/FileSaver.js')
+    script(type='text/javascript', src='/js/export/Export2Excel.js')
+
 block content
     block search
         div.container-fluid
@@ -17,8 +23,14 @@ block content
                                 indexType: $('#indexType').prop('name'),
                                 indexField: $('#indexFieldBtnText').text(),
                                 strSearch: $('#strSearch').val(),
-                                filters: JSON.stringify({fields: [] })
+                                filters: JSON.stringify({fields: []})
                             });
+                        };
+                        var exportTable = function() {
+                            if (!$('#export').prop('disabled')) {
+                                var filename = $('#indexName').prop('name') + '-' + $('#indexType').prop('name') + '-' //some datetime;
+                                export_table_to_excel('results', filename);
+                            }
                         };
                     span
                         span.dropwdown
@@ -37,7 +49,10 @@ block content
                             span.caret
                             ul.dropdown-menu(id='indexFieldMenu')
                         input.form-control(id='strSearch', name='strSearch', type='text', placeholder='Enter your search here...', enabled='false')
-                        button.btn-sm.btn-success#submit(onclick='fetchData()') Shop!
+                        button.btn-sm.btn-success#btnShop(onclick='fetchData()', disabled='true') Shop!
+                        button.btn-sm.btn-default.disabled#btnExport(onclick='exportTable()', disabled='true')
+                            img(src="images/xls.png", height="15px")
+                            | .xls
 
     block table
         div.container-fluid

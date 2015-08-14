@@ -90,3 +90,7 @@ th, td {
     margin-right: 5px !important;
     color:white !important;
 }
+
+#export {
+    margin-left: 10px;
+}

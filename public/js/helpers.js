@@ -131,7 +131,13 @@ function populateIndexTypeField(index, type) {
 
 function enableSearchInput() {
     var search = $('#strSearch');
-    ($('#indexFieldBtnText').text() !== 'Field') ? search.prop( 'disabled', false ) : search.prop( 'disabled', true );
+    if ($('#indexFieldBtnText').text() !== 'Field') {
+        search.prop( 'disabled', false );
+        manageShopButton(true);
+    } else {
+        search.prop( 'disabled', true );
+        manageShopButton(false);
+    }
 }
 
 function setDropDownText(buttonId, text, name) {
@@ -141,11 +147,25 @@ function setDropDownText(buttonId, text, name) {
 }
 function manageIndexDropDowns() {
     $( document ).ready(function() {
-
         // load the indices
         populateIndex();
-
     });
+}
+
+function manageExportToExcelButton(data) {
+    if (data.indexOf('There are no results') > 0) {
+        $('#btnExport').prop('disabled', true);
+    } else {
+        $('#btnExport').prop('disabled', false);
+    }
+}
+
+function manageShopButton(enable) {
+    if (enable) {
+        $('#btnShop').prop('disabled', false);
+    } else {
+        $('#btnShop').prop('disabled', true);
+    }
 }
 
 function updateResults(index) {
@@ -157,6 +177,7 @@ function updateResults(index) {
         }).done(function (data) {
             $('#results').html(data.table);
             $('#facets').html(data.facets);
+            manageExportToExcelButton(data.table);
         }).fail(function (jqXHR, textStatus) {
             $('#results').html(textStatus);
         });

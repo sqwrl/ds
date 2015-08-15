@@ -98,3 +98,15 @@ th, td {
 #content {
     padding-top: 50px;
 }
+
+#indexNameMenu.dropdown-menu {
+    left: 10px !important;
+}
+
+#indexTypeMenu.dropdown-menu {
+    left: 148px !important;
+}
+
+#indexFieldMenu.dropdown-menu {
+    left: 285px !important;
+}

@@ -183,7 +183,7 @@ function formatSearchResultsForTable(data, facets, params) {
             streamTable += column;
             streamTable += '\</th\>';
         });
-        streamTable += '\<tr\/\>';
+        streamTable += '\</tr\>';
         streamTable += '\<\/thead\>';
 
         // add each row

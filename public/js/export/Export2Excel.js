@@ -5,7 +5,7 @@ function generateArray(table) {
     for (var R = 0; R < rows.length; ++R) {
         var outRow = [];
         var row = rows[R];
-        var columns = row.querySelectorAll('td');
+        var columns = row.querySelectorAll('th,td');
         for (var C = 0; C < columns.length; ++C) {
             var cell = columns[C];
             var colspan = cell.getAttribute('colspan');

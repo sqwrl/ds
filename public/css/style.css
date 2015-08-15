@@ -94,3 +94,7 @@ th, td {
 #export {
     margin-left: 10px;
 }
+
+#content {
+    padding-top: 50px;
+}

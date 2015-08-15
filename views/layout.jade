@@ -3,7 +3,7 @@ html
     include head
         body
             block header
-                .navbar.navbar-default.navbar-static-top(role='navigation')
+                .navbar.navbar-default.navbar-fixed-top(role='navigation')
                     .container
                         .navbar-header
                         button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
@@ -24,6 +24,7 @@ html
                                         a Welcome, Guest
                             block details
             block content
+                div(id='content')
             block footer
                     - var getYear = function () {
                     -   return new Date().getFullYear();

@@ -1,14 +1,14 @@
 extends layout
 
 block content
-    div(align='center')
+    div(id='content', align='center')
         script(type='text/javascript').
             var doLogin = function() {
                 addToJSON( { 'id':'emailId', 'value':$('#emailId').val() } );
                 addToJSON( { 'id':'password', 'value':$('#password').val() } );
                 login();
             };
-        div(style='width:30%')
+        div(style='width:30%; margin-top:50px;')
             b
                 div#notification
             input.form-control#emailId(placeholder='Email Address')

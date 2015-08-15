@@ -7,58 +7,59 @@ append js
     script(type='text/javascript', src='/js/export/Export2Excel.js')
 
 block content
-    block search
-        div.container-fluid
-            div.row
-                div.col-sm-3.col-md-2.sidebar
-                    ul.nav.nav-sidebar(id='facets')
-                div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
-                    script(type='text/javascript').
-                        $(document).ready(function () {
-                            manageIndexDropDowns();
-                        });
-                        var fetchData = function () {
-                            updateResults({
-                                indexName: $('#indexName').prop('name'),
-                                indexType: $('#indexType').prop('name'),
-                                indexField: $('#indexFieldBtnText').text(),
-                                strSearch: $('#strSearch').val(),
-                                filters: JSON.stringify({fields: []})
+    div(id='content')
+        block search
+            div.container-fluid
+                div.row
+                    div.col-sm-3.col-md-2.sidebar
+                        ul.nav.nav-sidebar(id='facets')
+                    div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+                        script(type='text/javascript').
+                            $(document).ready(function () {
+                                manageIndexDropDowns();
                             });
-                        };
-                        var exportTable = function() {
-                            if (!$('#export').prop('disabled')) {
-                                var filename = $('#indexName').prop('name') + '-' + $('#indexType').prop('name') + '-' //some datetime;
-                                export_table_to_excel('results', filename);
-                            }
-                        };
-                    span
-                        span.dropwdown
-                            button.btn-sm.btn-primary.dropdown-toggle.selIndex(id='indexName', name='index', type='button' data-toggle='dropdown')
-                                span(id='indexNameBtnText') Sub System
-                            span.caret
-                            ul.dropdown-menu(id='indexNameMenu')
-                        span.dropwdown
-                            button.btn-sm.btn-info.dropdown-toggle.selType(id='indexType', name='type', type='button' data-toggle='dropdown')
-                                span(id='indexTypeBtnText') Information Type
-                            span.caret
-                            ul.dropdown-menu(id='indexTypeMenu')
-                        span.dropwdown
-                            button.btn-sm.btn-warning.dropdown-toggle.selField(id='indexField', name='field', type='button' data-toggle='dropdown')
-                                span(id='indexFieldBtnText') Field
-                            span.caret
-                            ul.dropdown-menu(id='indexFieldMenu')
-                        input.form-control(id='strSearch', name='strSearch', type='text', placeholder='Enter your search here...', enabled='false')
-                        button.btn-sm.btn-success#btnShop(onclick='fetchData()', disabled='true') Shop!
-                        button.btn-sm.btn-default.disabled#btnExport(onclick='exportTable()', disabled='true')
-                            img(src="images/xls.png", height="15px")
-                            | .xls
+                            var fetchData = function () {
+                                updateResults({
+                                    indexName: $('#indexName').prop('name'),
+                                    indexType: $('#indexType').prop('name'),
+                                    indexField: $('#indexFieldBtnText').text(),
+                                    strSearch: $('#strSearch').val(),
+                                    filters: JSON.stringify({fields: []})
+                                });
+                            };
+                            var exportTable = function() {
+                                if (!$('#export').prop('disabled')) {
+                                    var filename = $('#indexName').prop('name') + '-' + $('#indexType').prop('name') + '-' + Math.floor( new Date().getTime() / 1000);
+                                    export_table_to_excel('results', filename);
+                                }
+                            };
+                        span
+                            span.dropwdown
+                                button.btn-sm.btn-primary.dropdown-toggle.selIndex(id='indexName', name='index', type='button' data-toggle='dropdown')
+                                    span(id='indexNameBtnText') Sub System
+                                span.caret
+                                ul.dropdown-menu(id='indexNameMenu')
+                            span.dropwdown
+                                button.btn-sm.btn-info.dropdown-toggle.selType(id='indexType', name='type', type='button' data-toggle='dropdown')
+                                    span(id='indexTypeBtnText') Information Type
+                                span.caret
+                                ul.dropdown-menu(id='indexTypeMenu')
+                            span.dropwdown
+                                button.btn-sm.btn-warning.dropdown-toggle.selField(id='indexField', name='field', type='button' data-toggle='dropdown')
+                                    span(id='indexFieldBtnText') Field
+                                span.caret
+                                ul.dropdown-menu(id='indexFieldMenu')
+                            input.form-control(id='strSearch', name='strSearch', type='text', placeholder='Enter your search here...', enabled='false')
+                            button.btn-sm.btn-success#btnShop(onclick='fetchData()', disabled='true') Shop!
+                            button.btn-sm.btn-default.disabled#btnExport(onclick='exportTable()', disabled='true')
+                                img(src="images/xls.png", height="15px")
+                                | .xls
 
-    block table
-        div.container-fluid
-            div.row
-                div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
-                    table.table.table-responsive.table-striped(id='results')
+        block table
+            div.container-fluid
+                div.row
+                    div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+                        table.table.table-responsive.table-striped(id='results')
 
 
 

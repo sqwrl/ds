@@ -60,16 +60,16 @@ function doSearch(params, res, callback) {
     switch (params[3]) {
         case '':
             if (applyFilter) {
-                q = JSON.parse('{\"query\":{\"filtered\":{\"query\":{\"match_all\":{}},\"filter\":{}}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"match_all\":{}},\"filter\":{}}},\"aggs\":{}}');
             } else {
-                q = JSON.parse('{\"query\":{\"match_all\":{}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"match_all\":{}},\"aggs\":{}}');
             }
             break;
         default:
             if (applyFilter) {
-                q = JSON.parse('{\"query\":{\"filtered\":{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"filter\":{}}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"filter\":{}}},\"aggs\":{}}');
             } else {
-                q = JSON.parse('{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"aggs\":{}}');
             }
     }
 
@@ -199,8 +199,8 @@ function formatSearchResultsForTable(data, facets, params) {
                 }
             });
             streamTable += '\<\/tr\>';
-            streamTable += '\<\/tbody\/\>';
         });
+        streamTable += '\<\/tbody\/\>';
     } else {
         if (data.error !== undefined) {
             logger.error(data.error, 'ERROR: formatSearchResultsForTable');

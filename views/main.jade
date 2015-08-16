@@ -5,6 +5,7 @@ append js
     script(type='text/javascript', src='/js/export/Blob.js')
     script(type='text/javascript', src='/js/export/FileSaver.js')
     script(type='text/javascript', src='/js/export/Export2Excel.js')
+    script(type='text/javascript', src='/js/jquery.floatThead.min.js')
 
 block content
     div(id='content')
@@ -33,7 +34,7 @@ block content
                                     export_table_to_excel('results', filename);
                                 }
                             };
-                        span
+                        span.indexSearchButtonGroup
                             span.dropwdown
                                 button.btn-sm.btn-primary.dropdown-toggle.selIndex(id='indexName', name='index', type='button' data-toggle='dropdown')
                                     span(id='indexNameBtnText') Sub System
@@ -59,7 +60,7 @@ block content
             div.container-fluid
                 div.row
                     div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
-                        table.table.table-responsive.table-striped(id='results')
+                        table.table(id='results')
 
 
 

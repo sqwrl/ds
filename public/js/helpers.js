@@ -90,7 +90,7 @@ function populateIndexType(index) {
     var indexTypes = getIndexTypes(index);
     var type = '';
     var text = '';
-    var menu = $("#indexTypeMenu");
+    var menu = $('#indexTypeMenu');
     menu.empty();
     $.each(indexTypes, function(i, item) {
         if (i === 0) {
@@ -118,13 +118,13 @@ function populateIndexTypeField(index, type) {
     menu.empty();
     $.each(indexFields, function(i, item) {
         if (i === 0) text = item;
-        $("#indexFieldMenu").append('<li><a name="' + item + '">' + item + '</a></li>' );
+        $('#indexFieldMenu').append('<li><a name="' + item + '">' + item + '</a></li>' );
     });
     setDropDownText('indexField', text, text);
     enableSearchInput();
 
     // add click event handler
-    menu.find("a").click( function(e) {
+    menu.find('a').click( function(e) {
         setDropDownText('indexField', e.currentTarget.text, e.currentTarget.name);
     });
 }
@@ -175,7 +175,10 @@ function updateResults(index) {
             url: '/main/shop',
             data: index
         }).done(function (data) {
-            $('#results').html(data.table);
+            var $table = $('#results');
+            $table.html(data.table);
+            $table.floatThead();
+            calcFloatingHeaderMargin();
             $('#facets').html(data.facets);
             manageExportToExcelButton(data.table);
         }).fail(function (jqXHR, textStatus) {
@@ -193,7 +196,7 @@ function updateResultsWithFilter() {
     var addedFieldValue = false;
     var fieldObject = {};
     // get all the UI facets
-    var facets = $("#facets").find("li");
+    var facets = $('#facets').find('li');
     for (var f=0; f < facets.length; f++) {
         var facet = facets[f];
         // only 1x capture the index and type so that we know how to resubmit the search

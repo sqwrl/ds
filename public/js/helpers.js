@@ -178,7 +178,6 @@ function updateResults(index) {
             var $table = $('#results');
             $table.html(data.table);
             $table.floatThead();
-            calcFloatingHeaderMargin();
             $('#facets').html(data.facets);
             manageExportToExcelButton(data.table);
         }).fail(function (jqXHR, textStatus) {

@@ -88,7 +88,7 @@ function doSearch(params, res, callback) {
     // create the facet object
     var facetObject = {};
     for (var f=0; f<facets.length; f++) {
-        facetObject[facets[f]] = JSON.parse('{\"terms\":{\"field\":\"' + facets[f] + '\",\"order\":{\"_count\":\"desc\"}}}');
+        facetObject[facets[f]] = JSON.parse('{\"terms\":{\"field\":\"' + facets[f] + '.raw\",\"order\":{\"_count\":\"desc\"}}}');
     }
 
     // assign the object to aggs
@@ -105,7 +105,7 @@ function doSearch(params, res, callback) {
             var field = filtered.fields[fl];
             if (field.values.length === 1) {
                 filterObj.bool.must.push(
-                    JSON.parse('{"term":{"' + field.field + '":"' + field.values[0] + '"}}')
+                    JSON.parse('{"term":{"' + field.field + '.raw":"' + field.values[0] + '"}}')
                 );
             } else {
                 var valueList = '';
@@ -116,7 +116,7 @@ function doSearch(params, res, callback) {
                     }
                 }
                 filterObj.bool.must.push(
-                    JSON.parse('{"terms":{"' + field.field + '":[' + valueList + ']}}')
+                    JSON.parse('{"terms":{"' + field.field + '.raw":[' + valueList + ']}}')
                 );
             }
         }
@@ -126,7 +126,7 @@ function doSearch(params, res, callback) {
         q.aggs = facetObject;
     }
 
-    logger.debug(q, 'doSearch query');
+    logger.info(q, 'doSearch query');
 
     request({
         method: 'POST',
@@ -140,8 +140,15 @@ function doSearch(params, res, callback) {
                 logger.error(err, 'ERROR: doSearch');
                 callback(err, {});
             } else {
-                var results = formatSearchResultsForTable(body, facets, params);
-                callback(null, results);
+                var searchResult = body;
+                getIndexMapping(params[0], params[1], function(err, result) {
+                    if (!err) {
+                        searchResult._meta = JSON.parse(result.body)[params[0]].mappings[params[1]]._meta;
+                        var results = formatSearchResultsForTable(searchResult, facets, params);
+                        callback(null, results);
+                    }
+                });
+
             }
         });
     }
@@ -151,7 +158,6 @@ function doSearch(params, res, callback) {
  */
 function formatSearchResultsForTable(data, facets, params) {
     // TODO: order columns
-    // TODO: add header fixation
     // TODO: add # of left columns to fix
     var results = {};
     var streamTable = '';
@@ -171,10 +177,11 @@ function formatSearchResultsForTable(data, facets, params) {
         // when there is data
         streamTable += '\<thead\>';
         streamTable += '\<tr\>';
-        // generate the column headers
-        var column = rows[0];
-        _.each(column._source, function (o, row) {
-            columnHeaders.push(row);
+
+        // generate the column headers (caching opportunity)
+        var dataRow = rows[0];
+        _.each(dataRow._source, function (o, row) {
+            columnHeaders.push(data._meta[row].text);
         });
 
         // add each column
@@ -223,7 +230,7 @@ function formatSearchResultsForTable(data, facets, params) {
         for (var f = 0; f < facets.length; f++) {
             if (typeof facetsData[facets[f]] === 'object') {
                 var buckets = facetsData[facets[f]].buckets;
-                streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '">' + facets[f];
+                streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '">' + data._meta[facets[f]].text;
                 for (var b = 0; b < buckets.length; b++) {
                     var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
                     eventHandlers.push(id);
@@ -248,6 +255,22 @@ function formatSearchResultsForTable(data, facets, params) {
 
 function addClickEventHandler(selector) {
     return selector + '.click( function(e) { updateResultsWithFilter(e);});';
+}
+
+function getIndexMapping(index, type, callback) {
+    request({
+            method: 'GET',
+            uri: config.es.server + '/' + index + '/_mapping/' + type
+        },
+        function (err, res) {
+            if (err) {
+                logger.error(err, 'ERROR: getIndexMapping');
+                callback(err, {});
+            } else {
+                callback(null, res);
+            }
+        }
+    )
 }
 
 exports.index = index;

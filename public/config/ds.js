@@ -22,25 +22,25 @@ var config = {
                     name: 'employee',
                     text: 'Employee',
                     fields: [
-                        'Emp ID',
-                        'HR Status',
-                        'PY Status',
-                        'Full Name',
-                        'First Name',
-                        'Middle Name',
-                        'Last Name',
+                        'EmpID',
+                        'HRStatus',
+                        'PYStatus',
+                        'FullName',
+                        'FirstName',
+                        'MiddleName',
+                        'LastName',
                         'Type',
-                        'Bargaining Unit',
+                        'BargUnit',
                         'Division',
                         'Department',
-                        'Birth Date',
-                        'Hire Date'
+                        'BirthDt',
+                        'HireDt'
                     ],
                     facets: [
-                        'HR Status',
-                        'PY Status',
+                        'HRStatus',
+                        'PYStatus',
                         'Type',
-                        'Bargaining Unit',
+                        'BargUnit',
                         'Division',
                         'Department'
                     ]
@@ -55,47 +55,37 @@ var config = {
                     name: 'name',
                     text: 'Vendor',
                     fields: [
-                        'PE ID',
+                        'PeId',
                         'Status',
-                        'Full Name',
-                        'First Name',
-                        'Middle Name',
-                        'Last Name',
-                        'url',
-                        'Security Code',
-                        'Select Code 1',
-                        'Select Code 2',
-                        'Affiliation Code',
-                        'Email Type',
-                        'Email Address Code',
-                        'Email',
-                        'Address Code',
-                        'Street',
-                        'City',
-                        'State',
-                        'Zip'
+                        'FullName',
+                        'FirstName',
+                        'MiddleName',
+                        'LastName',
+                        'Url',
+                        'SecurityCode',
+                        'SelCode1',
+                        'SelCode2'
                     ],
                     facets: [
                         'Status',
-                        'Security Code',
-                        'Select Code 1',
-                        'Select Code 2',
-                        'Affiliation Code'
+                        'SecurityCode',
+                        'SelCode1',
+                        'SelCode2'
                     ]
                 },
                 {
                     name: 'product',
                     text: 'Products',
                     fields: [
-                        'Product ID',
-                        'PE ID',
-                        'Product Status',
-                        'Product Title',
-                        'Product Description'
+                        'ProductID',
+                        'PeId',
+                        'ProductStatus',
+                        'ProductTitle',
+                        'ProductDescription'
                     ],
                     facets: [
-                        'Product Status',
-                        'PE ID'
+                        'ProductStatus',
+                        'PeId'
                     ]
                 }
             ]

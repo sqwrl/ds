@@ -5,8 +5,7 @@
 var config          = require('config'),
     request         = require('request'),
     _               = require('lodash'),
-    clientConfig    = require('./../public/config/ds').config.index,
-    logger          = global.logger;
+    logger          = global.ds.logger;
 
 /**
  * Main page rendering entry
@@ -14,6 +13,7 @@ var config          = require('config'),
 function index(req, res) {
     res.render('main', {title:'Shop!'});
 }
+
 
 /**
  * Function called from client to do fetch the data
@@ -75,11 +75,16 @@ function doSearch(params, res, callback) {
 
     // load the facets
     var facets = [];
-    _.find(clientConfig, function (index) {
+    _.find(global.ds.index, function (index) {
         if (index.name === params[0]) {
-            for (var i=0; i < index.type.length; i++) {
-                if (index.type[i].name === params[1]) {
-                    facets = index.type[i].facets;
+            for (var i=0; i < index.types.length; i++) {
+                if (index.types[i].type === params[1]) {
+                    var fields = index.types[i].fields;
+                    for (var f=0; f < fields.length; f++) {
+                        if (fields[f].facet) {
+                            facets.push(fields[f].id);
+                        }
+                    }
                 }
             }
         }
@@ -143,9 +148,11 @@ function doSearch(params, res, callback) {
                 var searchResult = body;
                 getIndexMapping(params[0], params[1], function(err, result) {
                     if (!err) {
-                        searchResult._meta = JSON.parse(result.body)[params[0]].mappings[params[1]]._meta;
-                        var results = formatSearchResultsForTable(searchResult, facets, params);
-                        callback(null, results);
+                        if (result.body.length > 2) {
+                            searchResult._meta = JSON.parse(result.body)[params[0]].mappings[params[1]]._meta;
+                            var results = formatSearchResultsForTable(searchResult, facets, params);
+                            callback(null, results);
+                        }
                     }
                 });
 
@@ -230,7 +237,7 @@ function formatSearchResultsForTable(data, facets, params) {
         for (var f = 0; f < facets.length; f++) {
             if (typeof facetsData[facets[f]] === 'object') {
                 var buckets = facetsData[facets[f]].buckets;
-                streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '">' + data._meta[facets[f]].text;
+                streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '-' + facets[f] + '">' + data._meta[facets[f]].text;
                 for (var b = 0; b < buckets.length; b++) {
                     var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
                     eventHandlers.push(id);

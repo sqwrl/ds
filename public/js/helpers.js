@@ -2,6 +2,10 @@
  * Created by sqwrl on 8/7/15.
  */
 
+/**
+ * Login functions
+ */
+
 var jsonInput = {};
 var notificationClassName = {
     'error' : 'alert alert-danger',
@@ -66,6 +70,11 @@ function showNotification(content) {
     notification.html(content.message);
 }
 
+
+/**
+ * Index dropdown functions
+ */
+
 function populateIndex() {
     var indexNames = getIndices();
     var text = '';
@@ -76,7 +85,6 @@ function populateIndex() {
         if (i === 0) text = item.text;
         menu.append('<li><a name="' + item.name + '">' + item.text + '</a></li>' );
     });
-    setDropDownText('indexName', text);
 
     // add click event handler
     menu.find("a").click( function(e) {
@@ -112,15 +120,19 @@ function populateIndexType(index) {
 }
 
 function populateIndexTypeField(index, type) {
+    var field = '';
     var text = '';
     var indexFields = getFieldTypes(index, type);
     var menu = $('#indexFieldMenu');
     menu.empty();
     $.each(indexFields, function(i, item) {
-        if (i === 0) text = item;
-        $('#indexFieldMenu').append('<li><a name="' + item + '">' + item + '</a></li>' );
+        if (i === 0) {
+            field = item.name;
+            text = item.text;
+        }
+        $('#indexFieldMenu').append('<li><a name="' + item.name + '">' + item.text + '</a></li>' );
     });
-    setDropDownText('indexField', text, text);
+    setDropDownText('indexField', text, field);
     enableSearchInput();
 
     // add click event handler
@@ -145,11 +157,9 @@ function setDropDownText(buttonId, text, name) {
     button.text(text);
     $('#' + buttonId).prop('name', name);
 }
+
 function manageIndexDropDowns() {
-    $( document ).ready(function() {
-        // load the indices
-        populateIndex();
-    });
+    populateIndex();
 }
 
 function manageExportToExcelButton(data) {
@@ -167,6 +177,57 @@ function manageShopButton(enable) {
         $('#btnShop').prop('disabled', true);
     }
 }
+
+function getIndices () {
+    //return config.indexName;
+    var indices = [];
+    $.each(ds, function(i, item) {
+        if (item.types.length > 0 && item.types[0].fields.length > 0) {
+            indices.push({
+                name: item.name,
+                text: item.types[0].fields[0].text
+            });
+        }
+    });
+
+    return indices
+}
+
+function getIndexTypes (index) {
+
+    var indexInfo = findObject(ds, 'name', index);
+    var types = [];
+
+    for (var t=0; t < indexInfo.types.length; t++) {
+        types.push({
+            name: indexInfo.types[t].type,
+            text: indexInfo.types[t].fields[1].text
+        });
+    }
+
+    return types;
+}
+
+function getFieldTypes(index, type) {
+    var indexInfo = findObject(ds, 'name', index);
+    var typeInfo = findObject(indexInfo.types, 'type', type);
+    var fields = [];
+
+    if (typeInfo.fields.length > 2) {
+        for (var f=2; f < typeInfo.fields.length; f++) {
+            fields.push({
+                name: typeInfo.fields[f].id,
+                text: typeInfo.fields[f].text
+            });
+        }
+    }
+
+    return fields;
+}
+
+/**
+ * Get search results functions
+ */
 
 function updateResults(index) {
     if (index.indexName !== 'index') {
@@ -203,7 +264,8 @@ function updateResultsWithFilter() {
             var id = $(facet).prop('id');
             var firstIdx = id.indexOf('-');
             index = id.substring(0, firstIdx);
-            type = id.substring(id.indexOf('-') + 1, id.length);
+            var secondIdx = id.indexOf('-', firstIdx  +1);
+            type = id.substring(firstIdx + 1, secondIdx);
             state = {
                 index: index,
                 type: type,
@@ -215,8 +277,9 @@ function updateResultsWithFilter() {
             var node = facet.childNodes[n];
             // the first node is the title of the checkbox list: create the field in the state object
             if (n === 0) {
+                var parentId = node.parentElement.id;
                 fieldObject = {
-                    field: node.data,
+                    field: parentId.substring(parentId.lastIndexOf('-') + 1, parentId.length),
                     values: []
                 };
                 state.fields.push(fieldObject);
@@ -244,8 +307,26 @@ function updateResultsWithFilter() {
     updateResults({
         indexName: state.index,
         indexType: state.type,
-        indexField: $('#indexFieldBtnText').text(),
+        indexField: $('#indexField').prop('name'),
         strSearch: $('#strSearch').val(),
         filters: JSON.stringify(state)
     });
+}
+
+/**
+ * Generic functions
+ */
+
+function findObject(object, prop, propValue) {
+    for (var i=0; i < object.length; i++) {
+        if (object[i][prop] !== undefined) {
+            // valid object
+            if (object[i][prop] === propValue) {
+                return object[i];
+            }
+        } else {
+            // not a valid object
+            findObject(object[i][prop], prop, propValue);
+        }
+    }
 }

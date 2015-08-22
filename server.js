@@ -8,6 +8,7 @@
  * Dependencies.
  ******************************************************************************/
 require('./lib/logging');
+require('./lib/indices');
 var express         = require('express'),
     cookieParser    = require('cookie-parser'),
     bodyParser      = require('body-parser'),
@@ -19,7 +20,7 @@ var express         = require('express'),
     routes          = require('./routes/'),
     http            = require('http'),
     path            = require('path'),
-    logger          = global.logger;
+    logger          = global.ds.logger;
 
 
 /** **************************************************************************

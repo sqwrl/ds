@@ -6,6 +6,7 @@ append js
     script(type='text/javascript', src='/js/export/FileSaver.js')
     script(type='text/javascript', src='/js/export/Export2Excel.js')
     script(type='text/javascript', src='/js/jquery.floatThead.min.js')
+    script(type='text/javascript', src='/config/indexInfo.js')
 
 block content
     div(id='content')
@@ -23,7 +24,7 @@ block content
                                 updateResults({
                                     indexName: $('#indexName').prop('name'),
                                     indexType: $('#indexType').prop('name'),
-                                    indexField: $('#indexFieldBtnText').text(),
+                                    indexField: $('#indexField').prop('name'),
                                     strSearch: $('#strSearch').val(),
                                     filters: JSON.stringify({fields: []})
                                 });

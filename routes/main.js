@@ -5,8 +5,7 @@
 var config          = require('config'),
     request         = require('request'),
     _               = require('lodash'),
-    clientConfig    = require('./../public/config/ds').config.index,
-    logger          = global.logger;
+    logger          = global.ds.logger;
 
 /**
  * Main page rendering entry
@@ -14,6 +13,7 @@ var config          = require('config'),
 function index(req, res) {
     res.render('main', {title:'Shop!'});
 }
+
 
 /**
  * Function called from client to do fetch the data
@@ -60,26 +60,31 @@ function doSearch(params, res, callback) {
     switch (params[3]) {
         case '':
             if (applyFilter) {
-                q = JSON.parse('{\"query\":{\"filtered\":{\"query\":{\"match_all\":{}},\"filter\":{}}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"match_all\":{}},\"filter\":{}}},\"aggs\":{}}');
             } else {
-                q = JSON.parse('{\"query\":{\"match_all\":{}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"match_all\":{}},\"aggs\":{}}');
             }
             break;
         default:
             if (applyFilter) {
-                q = JSON.parse('{\"query\":{\"filtered\":{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"filter\":{}}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"filter\":{}}},\"aggs\":{}}');
             } else {
-                q = JSON.parse('{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"aggs\":{}}');
             }
     }
 
     // load the facets
     var facets = [];
-    _.find(clientConfig, function (index) {
+    _.find(global.ds.index, function (index) {
         if (index.name === params[0]) {
-            for (var i=0; i < index.type.length; i++) {
-                if (index.type[i].name === params[1]) {
-                    facets = index.type[i].facets;
+            for (var i=0; i < index.types.length; i++) {
+                if (index.types[i].type === params[1]) {
+                    var fields = index.types[i].fields;
+                    for (var f=0; f < fields.length; f++) {
+                        if (fields[f].facet) {
+                            facets.push(fields[f].id);
+                        }
+                    }
                 }
             }
         }
@@ -88,7 +93,7 @@ function doSearch(params, res, callback) {
     // create the facet object
     var facetObject = {};
     for (var f=0; f<facets.length; f++) {
-        facetObject[facets[f]] = JSON.parse('{\"terms\":{\"field\":\"' + facets[f] + '\",\"order\":{\"_count\":\"desc\"}}}');
+        facetObject[facets[f]] = JSON.parse('{\"terms\":{\"field\":\"' + facets[f] + '.raw\",\"order\":{\"_count\":\"desc\"}}}');
     }
 
     // assign the object to aggs
@@ -105,7 +110,7 @@ function doSearch(params, res, callback) {
             var field = filtered.fields[fl];
             if (field.values.length === 1) {
                 filterObj.bool.must.push(
-                    JSON.parse('{"term":{"' + field.field + '":"' + field.values[0] + '"}}')
+                    JSON.parse('{"term":{"' + field.field + '.raw":"' + field.values[0] + '"}}')
                 );
             } else {
                 var valueList = '';
@@ -116,7 +121,7 @@ function doSearch(params, res, callback) {
                     }
                 }
                 filterObj.bool.must.push(
-                    JSON.parse('{"terms":{"' + field.field + '":[' + valueList + ']}}')
+                    JSON.parse('{"terms":{"' + field.field + '.raw":[' + valueList + ']}}')
                 );
             }
         }
@@ -126,7 +131,7 @@ function doSearch(params, res, callback) {
         q.aggs = facetObject;
     }
 
-    logger.debug(q, 'doSearch query');
+    logger.info(q, 'doSearch query');
 
     request({
         method: 'POST',
@@ -140,8 +145,17 @@ function doSearch(params, res, callback) {
                 logger.error(err, 'ERROR: doSearch');
                 callback(err, {});
             } else {
-                var results = formatSearchResultsForTable(body, facets, params);
-                callback(null, results);
+                var searchResult = body;
+                getIndexMapping(params[0], params[1], function(err, result) {
+                    if (!err) {
+                        if (result.body.length > 2) {
+                            searchResult._meta = JSON.parse(result.body)[params[0]].mappings[params[1]]._meta;
+                            var results = formatSearchResultsForTable(searchResult, facets, params);
+                            callback(null, results);
+                        }
+                    }
+                });
+
             }
         });
     }
@@ -151,7 +165,6 @@ function doSearch(params, res, callback) {
  */
 function formatSearchResultsForTable(data, facets, params) {
     // TODO: order columns
-    // TODO: add header fixation
     // TODO: add # of left columns to fix
     var results = {};
     var streamTable = '';
@@ -171,10 +184,11 @@ function formatSearchResultsForTable(data, facets, params) {
         // when there is data
         streamTable += '\<thead\>';
         streamTable += '\<tr\>';
-        // generate the column headers
-        var column = rows[0];
-        _.each(column._source, function (o, row) {
-            columnHeaders.push(row);
+
+        // generate the column headers (caching opportunity)
+        var dataRow = rows[0];
+        _.each(dataRow._source, function (o, row) {
+            columnHeaders.push(data._meta[row].text);
         });
 
         // add each column
@@ -199,8 +213,8 @@ function formatSearchResultsForTable(data, facets, params) {
                 }
             });
             streamTable += '\<\/tr\>';
-            streamTable += '\<\/tbody\/\>';
         });
+        streamTable += '\<\/tbody\/\>';
     } else {
         if (data.error !== undefined) {
             logger.error(data.error, 'ERROR: formatSearchResultsForTable');
@@ -223,16 +237,18 @@ function formatSearchResultsForTable(data, facets, params) {
         for (var f = 0; f < facets.length; f++) {
             if (typeof facetsData[facets[f]] === 'object') {
                 var buckets = facetsData[facets[f]].buckets;
-                streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '">' + facets[f];
-                for (var b = 0; b < buckets.length; b++) {
-                    var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
-                    eventHandlers.push(id);
-                    streamFacets += '<div class="checkbox">';
-                    streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
-                    streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
-                    streamFacets += '</div>';
+                if (buckets.length > 0) {
+                    streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '-' + facets[f] + '">' + data._meta[facets[f]].text;
+                    for (var b = 0; b < buckets.length; b++) {
+                        var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
+                        eventHandlers.push(id);
+                        streamFacets += '<div class="checkbox">';
+                        streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
+                        streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
+                        streamFacets += '</div>';
+                    }
+                    streamFacets += '</li><br>';
                 }
-                streamFacets += '</li><br>';
             }
         }
 
@@ -248,6 +264,22 @@ function formatSearchResultsForTable(data, facets, params) {
 
 function addClickEventHandler(selector) {
     return selector + '.click( function(e) { updateResultsWithFilter(e);});';
+}
+
+function getIndexMapping(index, type, callback) {
+    request({
+            method: 'GET',
+            uri: config.es.server + '/' + index + '/_mapping/' + type
+        },
+        function (err, res) {
+            if (err) {
+                logger.error(err, 'ERROR: getIndexMapping');
+                callback(err, {});
+            } else {
+                callback(null, res);
+            }
+        }
+    )
 }
 
 exports.index = index;

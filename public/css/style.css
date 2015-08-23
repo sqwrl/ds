@@ -3,18 +3,6 @@
     border-left: thick solid #ff0000;
 }
 
-/*.primaryButtonStyle {*/
-    /*background: -moz-linear-gradient(center top , #4387FD, #4683EA) repeat scroll 0 0 rgba(0, 0, 0, 0);*/
-    /*border: medium none;*/
-    /*border-bottom-left-radius: 0;*/
-    /*border-top-left-radius: 0;*/
-    /*box-shadow: none;*/
-    /*height: 30px;*/
-    /*outline: medium none;*/
-    /*padding: 0;*/
-    /*width: 60px;*/
-/*}*/
-
 .navbar {
     margin-bottom: 10px !important;
 }
@@ -25,7 +13,7 @@
 }
 
 .navbar-fixed-bottom {
-    background-color: #424242;
+    background-color: #555;
     color: #EEEEEE;
 }
 
@@ -59,18 +47,6 @@
     margin: 10px;
     border-spacing: 0;
     width: 100%;
-}
-
-th, td {
-    white-space: nowrap;
-}
-
-.table > tbody > tr > td {
-    padding: 4px;
-}
-
-.table {
-    margin-top: 20px;
 }
 
 .selIndex {
@@ -109,4 +85,104 @@ th, td {
 
 #indexFieldMenu.dropdown-menu {
     left: 285px !important;
+}
+
+.indexSearchButtonGroup {
+    z-index: 3000;
+    background-color: #FFFFFF;
+    padding-bottom: 20px;
+    position: fixed;
+    width: 100%;
+}
+
+@media only screen
+and (max-width: 623px) {
+    .floatThead-wrapper {
+        top:98px;
+    }
+
+    .floatThead-floatContainer {
+        margin-top: 168px !important;
+    }
+}
+
+@media only screen
+    and (min-width: 623px)
+    and (max-width: 767px) {
+    .floatThead-wrapper {
+        top:66px;
+    }
+
+    .floatThead-floatContainer {
+        margin-top: 136px !important;
+    }
+}
+
+@media only screen
+and (min-width: 768px)
+and (max-width: 830px) {
+    .floatThead-wrapper {
+        top:98px;
+    }
+
+    .floatThead-floatContainer {
+        margin-top: 168px !important;
+    }
+}
+
+@media only screen
+and (min-width: 831px)
+and (max-width: 1249px) {
+    .floatThead-wrapper {
+        top:66px;
+    }
+
+    .floatThead-floatContainer {
+        margin-top: 136px !important;
+    }
+}
+
+@media only screen
+    and (min-width: 1250px) {
+    .floatThead-wrapper {
+        top:34px;
+    }
+
+    .floatThead-floatContainer {
+        margin-top: 104px !important;
+    }
+}
+
+
+.table {
+    margin-top: 20px;
+    padding: 0;
+}
+
+th {
+    padding: 1px;
+    /* NOTE: th padding must be set explicitly in order to support IE */
+    text-align: left;
+    font-weight:bold;
+    line-height: 2em;
+    color: #FFF;
+    background-color: #555;
+    white-space: nowrap;
+}
+
+tbody tr:nth-child(2n) {
+    background-color: #F7F7F7;
+}
+
+.table > tbody > tr > td {
+    padding: 8px;
+    white-space: nowrap;
+}
+
+tbody tr:hover {
+    background-color: #EEEEEE;
+}
+
+.row {
+    background-color: #FFFFFF;
 }

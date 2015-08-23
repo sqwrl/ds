@@ -237,16 +237,18 @@ function formatSearchResultsForTable(data, facets, params) {
         for (var f = 0; f < facets.length; f++) {
             if (typeof facetsData[facets[f]] === 'object') {
                 var buckets = facetsData[facets[f]].buckets;
-                streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '-' + facets[f] + '">' + data._meta[facets[f]].text;
-                for (var b = 0; b < buckets.length; b++) {
-                    var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
-                    eventHandlers.push(id);
-                    streamFacets += '<div class="checkbox">';
-                    streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
-                    streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
-                    streamFacets += '</div>';
+                if (buckets.length > 0) {
+                    streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '-' + facets[f] + '">' + data._meta[facets[f]].text;
+                    for (var b = 0; b < buckets.length; b++) {
+                        var id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
+                        eventHandlers.push(id);
+                        streamFacets += '<div class="checkbox">';
+                        streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
+                        streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
+                        streamFacets += '</div>';
+                    }
+                    streamFacets += '</li><br>';
                 }
-                streamFacets += '</li><br>';
             }
         }
 

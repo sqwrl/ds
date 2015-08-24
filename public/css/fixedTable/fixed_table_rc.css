@@ -1,0 +1,113 @@
+.ft_container table {
+    border-width: 0;
+    border-collapse: collapse;
+    margin: 0;
+    outline-style: none;
+}
+
+.ft_container table tr th {
+    font-weight: bold;
+    background-color: #424242;
+    color: #EEEEEE
+}
+
+.ft_container table thead {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+.ft_container table tr th,
+.ft_container table tr td {
+    border-collapse: collapse;
+    padding: 2px 4px;
+    word-wrap: break-word;
+    border: 0 solid #CCCCCC;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    overflow: hidden;
+}
+
+.ft_container table tr:first-child td,
+.ft_container table tr:first-child th {
+    border-top-width: 1px;
+    border-color: #CCCCCC;
+}
+
+.ft_container table tr td:first-child,
+.ft_container table tr th:first-child {
+    border-left-width: 1px;
+    border-color: #CCCCCC;
+}
+
+.ft_container {
+    overflow: hidden;
+    padding: 0;
+}
+
+.ft_rel_container {
+    position: relative;
+    overflow: hidden;
+    border-width: 0;
+    width: 100%;
+    height: 100%;
+    margin-top: 20px;
+}
+
+.ft_r, .ft_rc {
+    background-image: none;
+}
+
+.ft_rc {
+    position: absolute;
+    z-index: 1005;
+}
+
+.ft_r, .ft_c {
+    position: relative;
+}
+
+.ft_rwrapper, .ft_cwrapper {
+    overflow: hidden;
+    position: absolute;
+    z-index: 1001;
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/*.ft_rwrapper { width: 100%; padding-right: 17px; }*/
+
+.ft_scroller {
+    overflow: auto;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.ft_container tbody tr.ui-widget-content, thead.ui-widget-header {
+    background-color: #FFFFFF;
+}
+
+.ft_container table.sorttable thead tr th {
+    cursor: pointer;
+}
+
+.ft_container table thead tr th.fx_sort_bg {
+    background: url(../../images/bg.gif) no-repeat right center;
+}
+
+.ft_container table thead tr th.fx_sort_asc {
+    background-image: url(../../images/asc.gif);
+}
+
+.ft_container table thead tr th.fx_sort_desc {
+    background-image: url(../../images/desc.gif);
+}
+
+th, td {
+    white-space: nowrap;
+}
+
+.table > tbody > tr > td {
+    padding: 4px;
+}

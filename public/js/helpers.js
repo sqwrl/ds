@@ -351,8 +351,15 @@ function makeTable () {
             align: th[t].align
         });
     }
+
+    // get the # of fixed columns
+    var i = findObject(ds, 'name', $('#indexName').prop('name'));
+    var t = findObject(i.types, 'type', $('#indexType').prop('name'));
+    var fc = t.fixedColumns;
+
+    // create the table
     $table.fxdHdrCol({
-        fixedCols: 2,
+        fixedCols:fc,
         width: '100%',
         height: top,
         colModal: colModal,

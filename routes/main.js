@@ -67,9 +67,9 @@ function doSearch(params, res, callback) {
             break;
         default:
             if (applyFilter) {
-                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"filter\":{}}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"wildcard\":{\"' + params[2] + '\":\"*' + params[3].toLowerCase() + '*\"}},\"filter\":{}}},\"aggs\":{}}');
             } else {
-                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"match\":{\"' + params[2] + '\":\"' + params[3] + '\"}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"wildcard\":{\"' + params[2] + '\":\"*' + params[3].toLowerCase() + '*\"}},\"aggs\":{}}');
             }
     }
 

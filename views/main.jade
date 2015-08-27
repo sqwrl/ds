@@ -3,7 +3,6 @@ extends layout
 append css
     link(rel='stylesheet', href='/css/fixedTable/fixed_table_rc.css')
     link(rel='stylesheet', href='/css/nouislider.min.css')
-
 append js
     script(type='text/javascript', src='/js/export/xlsx.core.min.js')
     script(type='text/javascript', src='/js/export/Blob.js')
@@ -13,8 +12,6 @@ append js
     script(type='text/javascript', src='/js/fixedTable/sortable_table.js')
     script(type='text/javascript', src='/js/nouislider.min.js')
     script(type='text/javascript', src='/config/indexInfo.js')
-
-
 block content
     div(id='content')
         block search
@@ -26,8 +23,7 @@ block content
                         script(type='text/javascript').
                             $(document).ready(function () {
                                 manageIndexDropDowns();
-
-                                $(window).on('resize', function() {
+                                $(window).on('resize', function () {
                                     redrawTableOnResize();
                                 });
                             });
@@ -38,12 +34,12 @@ block content
                                     indexField: $('#indexField').prop('name'),
                                     strSearch: $('#strSearch').val(),
                                     filters: JSON.stringify({fields: []}),
-                                    first:true
+                                    first: true
                                 });
                             };
-                            var exportTable = function() {
+                            var exportTable = function () {
                                 if (!$('#export').prop('disabled')) {
-                                    var filename = $('#indexName').prop('name') + '-' + $('#indexType').prop('name') + '-' + Math.floor( new Date().getTime() / 1000);
+                                    var filename = $('#indexName').prop('name') + '-' + $('#indexType').prop('name') + '-' + Math.floor(new Date().getTime() / 1000);
                                     export_table_to_excel('results', filename);
                                 }
                             };
@@ -68,12 +64,8 @@ block content
                             button.btn-sm.btn-default.disabled#btnExport(onclick='exportTable()', disabled='true')
                                 img(src="images/xls.png", height="15px")
                                 | .xls
-
-        block table
+                    block table
             div.container-fluid
                 div.row
                     div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main(id='resultsTable')
                         table.table(id='results')
-
-
-

@@ -263,11 +263,11 @@ function redrawFacets(data) {
 
 function redrawTableOnResize() {
     // get existing table html
-    var $results = $('#results');
-    var tableHtml = $results.html();
+    var tableHtml = $('#results').html();
     // redraw
+    $('#resultsTable').empty();
     $('#resultsTable').html('<table id="results" class="table"></table>');
-    $results.html(tableHtml);
+    $('#results').html(tableHtml);
     makeTable();
 }
 
@@ -424,4 +424,70 @@ function findObject(object, prop, propValue) {
             findObject(object[i][prop], prop, propValue);
         }
     }
+}
+
+function createSlider(slider, min, max) {
+    var sliderFrom = $("#" + slider.id + "_from");
+    var sliderTo = $("#" + slider.id + "_to");
+    var type = $(sliderFrom).attr("type");
+
+    if (type !== "date") {
+        sliderFrom.val(min);
+        sliderTo.val(max);
+    } else {
+        sliderFrom.val(new Date(min).toISOString().split("T")[0]);
+        sliderTo.val(new Date(max).toISOString().split("T")[0]);
+    }
+
+    var sl = {
+        start: [min, max],
+        range: {"min": [Math.floor(min)], "max": [Math.floor(max) + 1] },
+        connect: true,
+        pips: {mode: "positions", values: [0, 33, 67, 100], density: 4}
+    };
+
+    if (type === "date") {
+        sl.pips.format = {
+            to: function (value) {
+                var dt = new Date(value);
+                return dt.getMonth()+1 +'/'+dt.getDate()+'/'+dt.getFullYear().toString().substr(2);
+            }
+        };
+    }
+
+    noUiSlider.create(slider, sl);
+
+    slider.noUiSlider.on("change", function (values, handle) {
+        if (handle === 0) {
+            if (type !== "date") {
+                sliderFrom.val(values[0]);
+            } else {
+                sliderFrom.val(new Date(Math.floor(values[0])).toISOString().split("T")[0]);
+            }
+        } else {
+            if (type !== "date") {
+                sliderTo.val(values[1]);
+            } else {
+                sliderTo.val(new Date(Math.floor(values[1])).toISOString().split("T")[0]);
+            }
+        }
+        updateResultsWithFilter(true);
+    });
+
+    $("#" + slider.id + "_from").on("change", function () {
+        if (type !== "date") {
+            slider.noUiSlider.set([this.value, null]);
+        } else {
+            slider.noUiSlider.set([new Date(this.value).getTime(), null]);
+        }
+        updateResultsWithFilter(true);
+    });
+    $("#" + slider.id + "_to").on("change", function () {
+        if ($(sliderTo).attr("type") !== "date") {
+            slider.noUiSlider.set([null, this.value]);
+        } else {
+            slider.noUiSlider.set([null, new Date(this.value).getTime()]);
+        }
+        updateResultsWithFilter(true);
+    });
 }

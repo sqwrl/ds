@@ -6,6 +6,7 @@
  * Login functions
  */
 
+var timer;
 var jsonInput = {};
 var notificationClassName = {
     'error' : 'alert alert-danger',
@@ -237,7 +238,7 @@ function updateResults(index) {
             data: index
         }).done(function (data) {
             redrawResultsTable(data);
-            redrawFacets(data);
+            if (index.first) redrawFacets(data);
             manageExportToExcelButton(data.table);
         }).fail(function (jqXHR, textStatus) {
             $('#results').html(textStatus);
@@ -251,7 +252,9 @@ function redrawResultsTable(data) {
     // fill with new table data
     $('#results').html(data.table);
     // apply the header/column freezes
-    makeTable();
+    if (data.table.indexOf('There are no results') === -1) {
+        makeTable();
+    }
 }
 
 function redrawFacets(data) {
@@ -260,77 +263,113 @@ function redrawFacets(data) {
 
 function redrawTableOnResize() {
     // get existing table html
-    var tableHtml = $('#results').html();
+    var $results = $('#results');
+    var tableHtml = $results.html();
     // redraw
     $('#resultsTable').html('<table id="results" class="table"></table>');
-    $('#results').html(tableHtml);
+    $results.html(tableHtml);
     makeTable();
 }
 
-function updateResultsWithFilter() {
+function updateResultsWithFilter(delay) {
 
-    // loop through the facets and capture the state
-    var index = '';
-    var type = '';
-    var state = [];
-    var addedFieldValue = false;
-    var fieldObject = {};
-    // get all the UI facets
-    var facets = $('#facets').find('li');
-    for (var f=0; f < facets.length; f++) {
-        var facet = facets[f];
-        // only 1x capture the index and type so that we know how to resubmit the search
-        if (f === 0) {
-            var id = $(facet).prop('id');
-            var firstIdx = id.indexOf('-');
-            index = id.substring(0, firstIdx);
-            var secondIdx = id.indexOf('-', firstIdx  +1);
-            type = id.substring(firstIdx + 1, secondIdx);
-            state = {
-                index: index,
-                type: type,
-                fields: []
-            };
-        }
-        // loop through the checkboxes
-        for (var n=0; n < facet.childNodes.length; n++) {
-            var node = facet.childNodes[n];
-            // the first node is the title of the checkbox list: create the field in the state object
-            if (n === 0) {
-                var parentId = node.parentElement.id;
-                fieldObject = {
-                    field: parentId.substring(parentId.lastIndexOf('-') + 1, parentId.length),
-                    values: []
+    var doUpdate = function() {
+        // loop through the facets and capture the state
+        var index = '';
+        var type = '';
+        var state = [];
+        var addedFieldValue = false;
+        var fieldObject = {};
+        // get all the UI facets
+        var facets = $('#facets').find('li');
+        for (var f = 0; f < facets.length; f++) {
+            var facet = facets[f];
+            // only 1x capture the index and type so that we know how to resubmit the search
+            if (f === 0) {
+                var id = $(facet).prop('id');
+                var firstIdx = id.indexOf('-');
+                index = id.substring(0, firstIdx);
+                var secondIdx = id.indexOf('-', firstIdx + 1);
+                type = id.substring(firstIdx + 1, secondIdx);
+                state = {
+                    index: index,
+                    type: type,
+                    fields: []
                 };
-                state.fields.push(fieldObject);
-                addedFieldValue = false;
-            } else {
-                // capture only those values that need to be used for the filter query
-                var input = $(node).find('input');
-                var idCb = $(input).prop('id');
-                switch ($(input).prop('type')) {
-                    case 'checkbox':
-                        if ($(input).prop('checked')) {
-                            state.fields[state.fields.length - 1].values.push(idCb.substr(idCb.lastIndexOf('-') + 1));
-                            addedFieldValue = true;
+            }
+            // loop through the facets
+            for (var n = 0; n < facet.childNodes.length; n++) {
+                var node = facet.childNodes[n];
+                // the first node is the title of the checkbox list: create the field in the state object
+                if (n === 0) {
+                    var parentId = node.parentElement.id;
+                    fieldObject = {
+                        field: parentId.substring(parentId.lastIndexOf('-') + 1, parentId.length),
+                        type: 'text',
+                        values: []
+                    };
+                    state.fields.push(fieldObject);
+                    addedFieldValue = false;
+                } else {
+                    // capture only those values that need to be used for the filter query
+                    var input = $(node).find('input');
+                    if (input.length > 0) {
+                        var idCb = $(input).prop('id');
+                        var from = $('#' + idCb).val();
+                        var to = $('#' + idCb.replace('_from','_to')).val();
+                        switch ($(input).prop('type')) {
+                            case 'checkbox':
+                                if ($(input).prop('checked')) {
+                                    state.fields[state.fields.length - 1].values.push(idCb.substr(idCb.lastIndexOf('-') + 1));
+                                    addedFieldValue = true;
+                                }
+                                break;
+                            case 'text':
+                                state.fields[state.fields.length - 1].type = 'number';
+                                state.fields[state.fields.length - 1].values.push(Number(from));
+                                state.fields[state.fields.length - 1].values.push(Number(to));
+                                addedFieldValue = true;
+                                break;
+                            case 'date':
+                                state.fields[state.fields.length - 1].type = 'date';
+                                state.fields[state.fields.length - 1].values.push(new Date(from).getTime());
+                                state.fields[state.fields.length - 1].values.push(new Date(to).getTime());
+                                addedFieldValue = true;
+                                break;
                         }
+                    }
                 }
             }
+            if (!addedFieldValue) {
+                // remove the field node as we don't need to filter on it since no values are selected
+                state.fields.pop();
+            }
         }
-        if (!addedFieldValue) {
-            // remove the field node as we don't need to filter on it since no values are selected
-            state.fields.pop();
-        }
+
+        // submit another search with the selected filters
+        updateResults({
+            indexName: state.index,
+            indexType: state.type,
+            indexField: $('#indexField').prop('name'),
+            strSearch: $('#strSearch').val(),
+            filters: JSON.stringify(state),
+            first: false
+        });
+    };
+
+    function manageSliderUpdate() {
+        // since the events are set to change, it's not capturing a lot of intermediate steps
+        // so this timeout is not super necessary and timeout is reducd to 50 miliseconds
+        window.clearTimeout(timer);
+        timer = window.setTimeout(doUpdate, 50);
     }
 
-    // submit another search with the selected filters
-    updateResults({
-        indexName: state.index,
-        indexType: state.type,
-        indexField: $('#indexField').prop('name'),
-        strSearch: $('#strSearch').val(),
-        filters: JSON.stringify(state)
-    });
+    // if this update is from a slider, delay the update as subsequent updates might come in
+    if (delay) {
+        manageSliderUpdate();
+    } else if (!delay && delay !== undefined) {
+        doUpdate();
+    }
 }
 
 function makeTable () {
@@ -354,8 +393,8 @@ function makeTable () {
 
     // get the # of fixed columns
     var i = findObject(ds, 'name', $('#indexName').prop('name'));
-    var t = findObject(i.types, 'type', $('#indexType').prop('name'));
-    var fc = t.fixedColumns;
+    var tp = findObject(i.types, 'type', $('#indexType').prop('name'));
+    var fc = tp.fixedColumns;
 
     // create the table
     $table.fxdHdrCol({

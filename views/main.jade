@@ -2,6 +2,7 @@ extends layout
 
 append css
     link(rel='stylesheet', href='/css/fixedTable/fixed_table_rc.css')
+    link(rel='stylesheet', href='/css/nouislider.min.css')
 
 append js
     script(type='text/javascript', src='/js/export/xlsx.core.min.js')
@@ -10,6 +11,7 @@ append js
     script(type='text/javascript', src='/js/export/Export2Excel.js')
     script(type='text/javascript', src='/js/fixedTable/fixed_table_rc.js')
     script(type='text/javascript', src='/js/fixedTable/sortable_table.js')
+    script(type='text/javascript', src='/js/nouislider.min.js')
     script(type='text/javascript', src='/config/indexInfo.js')
 
 
@@ -35,7 +37,8 @@ block content
                                     indexType: $('#indexType').prop('name'),
                                     indexField: $('#indexField').prop('name'),
                                     strSearch: $('#strSearch').val(),
-                                    filters: JSON.stringify({fields: []})
+                                    filters: JSON.stringify({fields: []}),
+                                    first:true
                                 });
                             };
                             var exportTable = function() {

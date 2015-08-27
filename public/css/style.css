@@ -83,3 +83,48 @@
     left: 285px !important;
     z-index: 2000;
 }
+
+.tooltip {
+    display: block;
+    position: absolute;
+    border: 1px solid #D9D9D9;
+    font: 400 12px/12px Arial;
+    border-radius: 3px;
+    background: #fff;
+    top: -43px;
+    padding: 5px;
+    left: -9px;
+    text-align: center;
+    width: 50px;
+}
+.tooltip strong {
+    display: block;
+    padding: 2px;
+}
+
+.noUi-horizontal {
+    top: 10px;
+    left: 20px;
+    width: 180px;
+    margin-bottom: 25px;
+}
+
+.noUi-connect {
+    background: #FFA500 !important;
+}
+
+.facetlabel {
+    padding-left: 10px;
+    font-weight: 400;
+}
+
+.facetinput {
+    width: 75px;
+}
+
+.facetdateinput {
+    width: 160px;
+    display: block;
+    margin-left: 55px;
+    margin-top: -23px;
+}

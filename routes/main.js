@@ -250,60 +250,63 @@ function formatSearchResultsForTable(data, facets, params) {
     /**
      * Generate the facets html
      */
-    // only generate the facets for display if no filters are defined
-    var filtered = JSON.parse(params[4]);
-    if (filtered.fields.length === 0) {
-        var streamFacets = '';
-        var eventHandlers = [];
-        for (var f = 0; f < facets.length; f++) {
-            if (typeof facetsData[facets[f].id] === 'object') {
-                if (facets[f].type === 'string') {
-                    // create li with checkboxes
-                    var id = '';
-                    var buckets = facetsData[facets[f].id].buckets;
-                    if (buckets.length > 0) {
-                        streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '-' + facets[f].id + '">' + data._meta[facets[f].id].text;
-                        for (var b = 0; b < buckets.length; b++) {
-                            id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
-                            eventHandlers.push(id);
-                            streamFacets += '<div class="checkbox">';
-                            streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
-                            streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
-                            streamFacets += '</div>';
+    results['facets'] = '<span></span>';
+    if (data.error === undefined && data.hits.hits.length > 0) {
+        // only generate the facets for display if no filters are defined
+        var filtered = JSON.parse(params[4]);
+        if (filtered.fields.length === 0) {
+            var streamFacets = '';
+            var eventHandlers = [];
+            for (var f = 0; f < facets.length; f++) {
+                if (typeof facetsData[facets[f].id] === 'object') {
+                    if (facets[f].type === 'string') {
+                        // create li with checkboxes
+                        var id = '';
+                        var buckets = facetsData[facets[f].id].buckets;
+                        if (buckets.length > 0) {
+                            streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '-' + facets[f].id + '">' + data._meta[facets[f].id].text;
+                            for (var b = 0; b < buckets.length; b++) {
+                                id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
+                                eventHandlers.push(id);
+                                streamFacets += '<div class="checkbox">';
+                                streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
+                                streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
+                                streamFacets += '</div>';
+                            }
+                            streamFacets += '</li><br>';
+                        }
+                    } else {
+                        // create a range slider
+                        var slider = facetsData[facets[f].id];
+                        id = params[0] + '-' + params[1] + '-' + facets[f].id;
+                        var type = (data._meta[facets[f].id].type === 'date') ? 'date' : 'text';
+                        streamFacets += '<li class="h5" id="' + id + '">' + data._meta[facets[f].id].text;
+                        streamFacets += '<div class="range" id="' + id + '_slider" name="' + slider.min + '|' + slider.max + '"></div>';
+                        if (type !== 'date') {
+                            streamFacets += '<div><label class="facetlabel">From:</label><input class="facetinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetinput" id="' + id + '_slider_to" type="' + type + '"></div>';
+                        } else {
+                            streamFacets += '<div><label class="facetlabel">From:</label><input class="facetdateinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetdateinput" id="' + id + '_slider_to" type="' + type + '"></div>';
                         }
                         streamFacets += '</li><br>';
                     }
-                } else {
-                    // create a range slider
-                    var slider = facetsData[facets[f].id];
-                    id = params[0] + '-' + params[1] + '-' + facets[f].id;
-                    var type = (data._meta[facets[f].id].type === 'date') ? 'date' : 'text';
-                    streamFacets += '<li class="h5" id="' + id + '">' + data._meta[facets[f].id].text;
-                    streamFacets += '<div class="range" id="' + id + '_slider" name="' + slider.min + '|' + slider.max + '"></div>';
-                    if (type !== 'date') {
-                        streamFacets += '<div><label class="facetlabel">From:</label><input class="facetinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetinput" id="' + id + '_slider_to" type="' + type + '"></div>';
-                    } else {
-                        streamFacets += '<div><label class="facetlabel">From:</label><input class="facetdateinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetdateinput" id="' + id + '_slider_to" type="' + type + '"></div>';
-                    }
-                    streamFacets += '</li><br>';
                 }
             }
-        }
 
-        // add click event handlers
-        streamFacets += '<script>\n';
-        streamFacets += 'var sliders = $("#facets").find("div.range");\n';
-        streamFacets += 'for (var s=0; s < sliders.length; s++) {\n';
-        streamFacets += '  var id = $(sliders[s]).prop("id");\n';
-        streamFacets += '  var name = $("#" + id).attr("name");\n';
-        streamFacets += '  var min = Number(name.substring(0, name.indexOf("|")));\n';
-        streamFacets += '  var max = Number(name.substring(name.indexOf("|") + 1, name.length));\n';
-        streamFacets += '  var slider = document.getElementById(id);\n';
-        streamFacets += '  createSlider(slider, min, max);\n';
-        streamFacets += '}\n';
-        streamFacets += '$("#facets").find("input:checkbox").click( function(e) { updateResultsWithFilter(false) });\n';
-        streamFacets += '</script>';
-        results['facets'] = streamFacets;
+            // add click event handlers
+            streamFacets += '<script>\n';
+            streamFacets += 'var sliders = $("#facets").find("div.range");\n';
+            streamFacets += 'for (var s=0; s < sliders.length; s++) {\n';
+            streamFacets += '  var id = $(sliders[s]).prop("id");\n';
+            streamFacets += '  var name = $("#" + id).attr("name");\n';
+            streamFacets += '  var min = Number(name.substring(0, name.indexOf("|")));\n';
+            streamFacets += '  var max = Number(name.substring(name.indexOf("|") + 1, name.length));\n';
+            streamFacets += '  var slider = document.getElementById(id);\n';
+            streamFacets += '  createSlider(slider, min, max);\n';
+            streamFacets += '}\n';
+            streamFacets += '$("#facets").find("input:checkbox").click( function(e) { updateResultsWithFilter(false) });\n';
+            streamFacets += '</script>';
+            results['facets'] = streamFacets;
+        }
     }
 
     return results;

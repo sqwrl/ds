@@ -25,7 +25,7 @@ function generateArray(table) {
                 rowspan = rowspan || 1;
                 colspan = colspan || 1;
                 ranges.push({s:{r:R, c:outRow.length},e:{r:R+rowspan-1, c:outRow.length+colspan-1}});
-            };
+            }
 
             //Handle Value
             outRow.push(cellValue !== "" ? cellValue : null);
@@ -36,7 +36,7 @@ function generateArray(table) {
         out.push(outRow);
     }
     return [out, ranges];
-};
+}
 
 function datenum(v, date1904) {
     if(date1904) v+=1462;
@@ -92,8 +92,8 @@ function export_table_to_excel(id, filename) {
 
     /* original data */
     var data = oo[0];
-    var ws_name = "SheetJS";
-    console.log(data);
+    var ws_name = "DataShopper";
+    //console.log(data);
 
     var wb = new Workbook(), ws = sheet_from_array_of_arrays(data);
 

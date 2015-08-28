@@ -69,19 +69,8 @@
     padding-top: 50px;
 }
 
-#indexNameMenu.dropdown-menu {
-    left: 10px !important;
-    z-index: 2000;
-}
-
-#indexTypeMenu.dropdown-menu {
-    left: 148px !important;
-    z-index: 2000;
-}
-
-#indexFieldMenu.dropdown-menu {
-    left: 285px !important;
-    z-index: 2000;
+.dropdown-menu {
+    z-index: 3000;
 }
 
 .tooltip {
@@ -119,7 +108,7 @@
 }
 
 .facetinput {
-    width: 75px;
+    width: 65px;
 }
 
 .facetdateinput {
@@ -127,4 +116,8 @@
     display: block;
     margin-left: 55px;
     margin-top: -23px;
+}
+
+#numberOfColumns {
+    width: 40px;
 }

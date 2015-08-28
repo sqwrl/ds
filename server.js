@@ -61,7 +61,7 @@ app.get('/logout', logout.index);
 app.get('/main', main.index);
 app.get('/main/shop', main.shop);
 app.get('*', function(req, res) {
-    logger.info('somehow something went wrong');
+    logger.info(req.originalUrl, 'not a valid route');
 });
 
 app.post('/signin/login', signin.login);

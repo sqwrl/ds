@@ -38,32 +38,43 @@ block content
                                 });
                             };
                             var exportTable = function () {
-                                if (!$('#export').prop('disabled')) {
+                                if (!$('#optionExport').hasClass('disabled')) {
                                     var filename = $('#indexName').prop('name') + '-' + $('#indexType').prop('name') + '-' + Math.floor(new Date().getTime() / 1000);
                                     export_table_to_excel('results', filename);
                                 }
                             };
                         span.indexSearchButtonGroup
-                            span.dropwdown
+                            span.dropdown
                                 button.btn-sm.btn-primary.dropdown-toggle.selIndex(id='indexName', name='index', type='button' data-toggle='dropdown')
                                     span(id='indexNameBtnText') Sub System
                                 span.caret
                                 ul.dropdown-menu(id='indexNameMenu')
-                            span.dropwdown
+                            span.dropdown
                                 button.btn-sm.btn-info.dropdown-toggle.selType(id='indexType', name='type', type='button' data-toggle='dropdown')
                                     span(id='indexTypeBtnText') Information Type
                                 span.caret
                                 ul.dropdown-menu(id='indexTypeMenu')
-                            span.dropwdown
+                            span.dropdown
                                 button.btn-sm.btn-warning.dropdown-toggle.selField(id='indexField', name='field', type='button' data-toggle='dropdown')
                                     span(id='indexFieldBtnText') Field
                                 span.caret
                                 ul.dropdown-menu(id='indexFieldMenu')
                             input.form-control(id='strSearch', name='strSearch', type='text', placeholder='Enter your search here...', enabled='false')
                             button.btn-sm.btn-success#btnShop(onclick='fetchData()', disabled='true') Shop!
-                            button.btn-sm.btn-default.disabled#btnExport(onclick='exportTable()', disabled='true')
-                                img(src="images/xls.png", height="15px")
-                                | .xls
+                            span.dropdown
+                                button.btn-sm.btn-default.dropdown-toggle.selOptions(id='options', name='options', type='button' data-toggle='dropdown')
+                                    span(id='optionsBtnText') Options
+                                span.caret
+                                ul.dropdown-menu(id='optionsMenu')
+                                    li.disabled(id='optionExport')
+                                        a#btnExport(onclick='exportTable()')
+                                            img(src="images/xls.png", height="15px")
+                                            | .xls
+                                    li.divider
+                                    li.disabled(id='optionFixedColumns')
+                                        a#btnFixedColumns(onclick='setFixedColumns()')
+                                            input.disabled(id='numberOfColumns', type='number' min=0 max=9 value=0)
+                                            | Fixed Columns
                     block table
             div.container-fluid
                 div.row

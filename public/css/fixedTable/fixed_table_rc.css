@@ -93,15 +93,17 @@
 }
 
 .ft_container table thead tr th.fx_sort_bg {
-    background: url(../../images/bg.gif) no-repeat right center;
+    font-weight: bold;
+    background: #424242 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAJCAYAAADdA2d2AAAAKklEQVR42mNgIBL8BwIGaoL/SIDqBlLF4P94AMOgAjRzKc28TrOwJMVAAI7ff4GOIx77AAAAAElFTkSuQmCC') no-repeat right center;
+    color: #EEEEEE
 }
 
 .ft_container table thead tr th.fx_sort_asc {
-    background-image: url(../../images/asc.gif);
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAECAYAAABhnXSoAAAAHklEQVR42mNgIAH8BwIGaoL/SIDqBlLF4P94AC49AB7AP8HjMXK0AAAAAElFTkSuQmCC');
 }
 
 .ft_container table thead tr th.fx_sort_desc {
-    background-image: url(../../images/desc.gif);
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAECAYAAABhnXSoAAAAHElEQVR42mNgwAP+4wEMlACqG4jNYAZqAlIMBACUxT/BoCjPVQAAAABJRU5ErkJggg==');
 }
 
 th, td {

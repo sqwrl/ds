@@ -14,6 +14,12 @@ var notificationClassName = {
     'warning' : 'alert alert-warning',
     'success' : 'alert alert-success'
 };
+var tableResults = '<thead>';
+var tableSettings = {
+    sortColumnIndex: -1,
+    sortColumnDirection: 'asc',
+    numberOfFixedColumns: 0
+};
 
 function login() {
     if (validateLogin()) {
@@ -148,7 +154,7 @@ function enableSearchInput() {
         search.prop( 'disabled', false );
         manageShopButton(true);
     } else {
-        search.prop( 'disabled', true );
+        search.prop('disabled', true );
         manageShopButton(false);
     }
 }
@@ -164,10 +170,29 @@ function manageIndexDropDowns() {
 }
 
 function manageExportToExcelButton(data) {
-    if (data.indexOf('There are no results') > 0) {
-        $('#btnExport').prop('disabled', true);
+    var optionExport = $('#optionExport');
+    var optionFixedCoumns = $('#optionFixedColumns');
+    var inputNumberOfCoumns = $('#numberOfColumns');
+    if (data.indexOf(tableResults) === -1) {
+        if (!optionExport.hasClass('disabled')) {
+            optionExport.addClass('disabled');
+        }
+        if (!optionFixedCoumns.hasClass('disabled')) {
+            optionFixedCoumns.addClass('disabled');
+        }
+        if (!inputNumberOfCoumns.hasClass('disabled')) {
+            inputNumberOfCoumns.addClass('disabled');
+        }
     } else {
-        $('#btnExport').prop('disabled', false);
+        if (optionExport.hasClass('disabled')) {
+            optionExport.removeClass('disabled');
+        }
+        if (optionFixedCoumns.hasClass('disabled')) {
+            optionFixedCoumns.removeClass('disabled');
+        }
+        if (inputNumberOfCoumns.hasClass('disabled')) {
+            inputNumberOfCoumns.removeClass('disabled');
+        }
     }
 }
 
@@ -252,7 +277,7 @@ function redrawResultsTable(data) {
     // fill with new table data
     $('#results').html(data.table);
     // apply the header/column freezes
-    if (data.table.indexOf('There are no results') === -1) {
+    if (data.table.indexOf(tableResults) > -1) {
         makeTable();
     }
 }
@@ -359,7 +384,7 @@ function updateResultsWithFilter(delay) {
 
     function manageSliderUpdate() {
         // since the events are set to change, it's not capturing a lot of intermediate steps
-        // so this timeout is not super necessary and timeout is reducd to 50 miliseconds
+        // so this timeout is not super necessary and timeout is reduced to 50 miliseconds
         window.clearTimeout(timer);
         timer = window.setTimeout(doUpdate, 50);
     }
@@ -372,7 +397,7 @@ function updateResultsWithFilter(delay) {
     }
 }
 
-function makeTable () {
+function makeTable() {
     var $table = $('#results');
 
     if ($table.hasClass('disabled')) return;
@@ -391,14 +416,9 @@ function makeTable () {
         });
     }
 
-    // get the # of fixed columns
-    var i = findObject(ds, 'name', $('#indexName').prop('name'));
-    var tp = findObject(i.types, 'type', $('#indexType').prop('name'));
-    var fc = tp.fixedColumns;
-
     // create the table
     $table.fxdHdrCol({
-        fixedCols:fc,
+        fixedCols: tableSettings.numberOfFixedColumns,
         width: '100%',
         height: top,
         colModal: colModal,
@@ -406,6 +426,7 @@ function makeTable () {
     });
 
     $table.addClass('disabled');
+    $('#numberOfColumns').val(tableSettings.numberOfFixedColumns);
 }
 
 /**
@@ -427,26 +448,26 @@ function findObject(object, prop, propValue) {
 }
 
 function createSlider(slider, min, max) {
-    var sliderFrom = $("#" + slider.id + "_from");
-    var sliderTo = $("#" + slider.id + "_to");
-    var type = $(sliderFrom).attr("type");
+    var sliderFrom = $('#' + slider.id + '_from');
+    var sliderTo = $('#' + slider.id + '_to');
+    var type = $(sliderFrom).attr('type');
 
-    if (type !== "date") {
+    if (type !== 'date') {
         sliderFrom.val(min);
         sliderTo.val(max);
     } else {
-        sliderFrom.val(new Date(min).toISOString().split("T")[0]);
-        sliderTo.val(new Date(max).toISOString().split("T")[0]);
+        sliderFrom.val(new Date(min).toISOString().split('T')[0]);
+        sliderTo.val(new Date(max).toISOString().split('T')[0]);
     }
 
     var sl = {
         start: [min, max],
-        range: {"min": [Math.floor(min)], "max": [Math.floor(max) + 1] },
+        range: {'min': [Math.floor(min)], 'max': [Math.floor(max) + 1] },
         connect: true,
-        pips: {mode: "positions", values: [0, 33, 67, 100], density: 4}
+        pips: {mode: 'positions', values: [0, 33, 67, 100], density: 4}
     };
 
-    if (type === "date") {
+    if (type === 'date') {
         sl.pips.format = {
             to: function (value) {
                 var dt = new Date(value);
@@ -457,37 +478,57 @@ function createSlider(slider, min, max) {
 
     noUiSlider.create(slider, sl);
 
-    slider.noUiSlider.on("change", function (values, handle) {
+    slider.noUiSlider.on('change', function (values, handle) {
         if (handle === 0) {
-            if (type !== "date") {
+            if (type !== 'date') {
                 sliderFrom.val(values[0]);
             } else {
-                sliderFrom.val(new Date(Math.floor(values[0])).toISOString().split("T")[0]);
+                sliderFrom.val(new Date(Math.floor(values[0])).toISOString().split('T')[0]);
             }
         } else {
-            if (type !== "date") {
+            if (type !== 'date') {
                 sliderTo.val(values[1]);
             } else {
-                sliderTo.val(new Date(Math.floor(values[1])).toISOString().split("T")[0]);
+                sliderTo.val(new Date(Math.floor(values[1])).toISOString().split('T')[0]);
             }
         }
         updateResultsWithFilter(true);
     });
 
-    $("#" + slider.id + "_from").on("change", function () {
-        if (type !== "date") {
+    $('#' + slider.id + '_from').on('change', function () {
+        if (type !== 'date') {
             slider.noUiSlider.set([this.value, null]);
         } else {
             slider.noUiSlider.set([new Date(this.value).getTime(), null]);
         }
         updateResultsWithFilter(true);
     });
-    $("#" + slider.id + "_to").on("change", function () {
-        if ($(sliderTo).attr("type") !== "date") {
+    $('#' + slider.id + '_to').on('change', function () {
+        if ($(sliderTo).attr('type') !== 'date') {
             slider.noUiSlider.set([null, this.value]);
         } else {
             slider.noUiSlider.set([null, new Date(this.value).getTime()]);
         }
         updateResultsWithFilter(true);
     });
+}
+
+function setFixedColumns() {
+    if (!$('#optionFixedColumns').hasClass('disabled')) {
+        tableSettings.numberOfFixedColumns = Number($('#numberOfColumns').val());
+        var $table = $('#results');
+        var html = $table.html();
+        if (html.indexOf(tableResults) > -1) {
+            if (tableSettings.numberOfFixedColumns >= 0) {
+                // remove first any sorting attributes if applicable
+                html = html.replace(/ class="fx_sort_bg sorttable_sorted_reverse"/g, '');
+                html = html.replace(/ class="fx_sort_bg sorttable_sorted"/g, '');
+                html = html.replace(/ class="fx_sort_bg"/g, '');
+                html = html.replace(/<span id="sorttable_sortfwdind">&nbsp;▾<\/span>/g, '');
+                html = html.replace(/<span id="sorttable_sortrevind">&nbsp;▴<\/span>/g, '');
+                $table.html(html);
+                redrawTableOnResize();
+            }
+        }
+    }
 }

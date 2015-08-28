@@ -102,6 +102,10 @@
     background: #FFA500 !important;
 }
 
+.noUi-handle {
+    background: #424242 !important;
+}
+
 .facetlabel {
     padding-left: 10px;
     font-weight: 400;

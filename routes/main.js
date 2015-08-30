@@ -266,7 +266,7 @@ function formatSearchResultsForTable(data, facets, params) {
                         if (buckets.length > 0) {
                             streamFacets += '<li class="h5" id="' + params[0] + '--' + params[1] + '--' + facets[f].id + '">' + data._meta[facets[f].id].text;
                             for (var b = 0; b < buckets.length; b++) {
-                                id = params[0] + '--' + params[1] + '--' + buckets[b].key.replace(/\s/g,'@%');
+                                id = params[0] + '--' + params[1] + '--' + buckets[b].key.replace(/ /g,'@%');
                                 eventHandlers.push(id);
                                 streamFacets += '<div class="checkbox">';
                                 streamFacets += '<label><input type="checkbox" id="' + id + '"/>';

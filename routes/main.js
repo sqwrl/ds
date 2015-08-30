@@ -264,9 +264,9 @@ function formatSearchResultsForTable(data, facets, params) {
                         var id = '';
                         var buckets = facetsData[facets[f].id].buckets;
                         if (buckets.length > 0) {
-                            streamFacets += '<li class="h5" id="' + params[0] + '-' + params[1] + '-' + facets[f].id + '">' + data._meta[facets[f].id].text;
+                            streamFacets += '<li class="h5" id="' + params[0] + '--' + params[1] + '--' + facets[f].id + '">' + data._meta[facets[f].id].text;
                             for (var b = 0; b < buckets.length; b++) {
-                                id = params[0] + '-' + params[1] + '-' + buckets[b].key.replace(' ', '*');
+                                id = params[0] + '--' + params[1] + '--' + buckets[b].key.replace(/\s/g,'@%');
                                 eventHandlers.push(id);
                                 streamFacets += '<div class="checkbox">';
                                 streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
@@ -278,7 +278,7 @@ function formatSearchResultsForTable(data, facets, params) {
                     } else {
                         // create a range slider
                         var slider = facetsData[facets[f].id];
-                        id = params[0] + '-' + params[1] + '-' + facets[f].id;
+                        id = params[0] + '--' + params[1] + '--' + facets[f].id;
                         var type = (data._meta[facets[f].id].type === 'date') ? 'date' : 'text';
                         streamFacets += '<li class="h5" id="' + id + '">' + data._meta[facets[f].id].text;
                         streamFacets += '<div class="range" id="' + id + '_slider" name="' + slider.min + '|' + slider.max + '"></div>';

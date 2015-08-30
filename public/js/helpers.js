@@ -312,10 +312,10 @@ function updateResultsWithFilter(delay) {
             // only 1x capture the index and type so that we know how to resubmit the search
             if (f === 0) {
                 var id = $(facet).prop('id');
-                var firstIdx = id.indexOf('-');
+                var firstIdx = id.indexOf('--');
                 index = id.substring(0, firstIdx);
-                var secondIdx = id.indexOf('-', firstIdx + 1);
-                type = id.substring(firstIdx + 1, secondIdx);
+                var secondIdx = id.indexOf('--', firstIdx + 1);
+                type = id.substring(firstIdx + 2, secondIdx);
                 state = {
                     index: index,
                     type: type,
@@ -329,7 +329,7 @@ function updateResultsWithFilter(delay) {
                 if (n === 0) {
                     var parentId = node.parentElement.id;
                     fieldObject = {
-                        field: parentId.substring(parentId.lastIndexOf('-') + 1, parentId.length),
+                        field: parentId.substring(parentId.lastIndexOf('--') + 2, parentId.length),
                         type: 'text',
                         values: []
                     };
@@ -340,12 +340,13 @@ function updateResultsWithFilter(delay) {
                     var input = $(node).find('input');
                     if (input.length > 0) {
                         var idCb = $(input).prop('id');
-                        var from = $('#' + idCb).val();
-                        var to = $('#' + idCb.replace('_from','_to')).val();
+                        var from = $(document.getElementById(idCb)).val();
+                        var idTo = idCb.replace('_from','_to');
+                        var to = $(document.getElementById(idTo)).val();
                         switch ($(input).prop('type')) {
                             case 'checkbox':
                                 if ($(input).prop('checked')) {
-                                    state.fields[state.fields.length - 1].values.push(idCb.substr(idCb.lastIndexOf('-') + 1));
+                                    state.fields[state.fields.length - 1].values.push(idCb.substr(idCb.lastIndexOf('--') + 2).replace(/@%/g,' '));
                                     addedFieldValue = true;
                                 }
                                 break;

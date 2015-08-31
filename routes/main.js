@@ -24,7 +24,9 @@ function shop (req, res) {
         logger.debug(req.query.indexType, 'shop: type');
         logger.debug(req.query.indexField, 'shop: field');
         logger.debug(req.query.strSearch, 'shop: for');
-        var params = [req.query.indexName, req.query.indexType, req.query.indexField, req.query.strSearch, req.query.filters];
+        logger.debug(req.query.filters, 'shop: filters');
+        logger.debug(req.query.sort, 'shop: sort');
+        var params = [req.query.indexName, req.query.indexType, req.query.indexField, req.query.strSearch, req.query.filters, req.query.sort];
 
         var callback = function (err, results) {
             if (err) {
@@ -60,16 +62,16 @@ function doSearch(params, res, callback) {
     switch (params[3]) {
         case '':
             if (applyFilter) {
-                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"match_all\":{}},\"filter\":{}}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"match_all\":{}},\"filter\":{}}},\"sort\":{},\"aggs\":{}}');
             } else {
-                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"match_all\":{}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"match_all\":{}},\"sort\":{},\"aggs\":{}}');
             }
             break;
         default:
             if (applyFilter) {
-                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"wildcard\":{\"' + params[2] + '\":\"*' + params[3].toLowerCase() + '*\"}},\"filter\":{}}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"filtered\":{\"query\":{\"wildcard\":{\"' + params[2] + '\":\"*' + params[3].toLowerCase() + '*\"}},\"filter\":{}}},\"sort\":{},\"aggs\":{}}');
             } else {
-                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"wildcard\":{\"' + params[2] + '\":\"*' + params[3].toLowerCase() + '*\"}},\"aggs\":{}}');
+                q = JSON.parse('{\"from\":0,\"size\":1000,\"query\":{\"wildcard\":{\"' + params[2] + '\":\"*' + params[3].toLowerCase() + '*\"}},\"sort\":{},\"aggs\":{}}');
             }
     }
 
@@ -107,6 +109,15 @@ function doSearch(params, res, callback) {
                 facetObject[facets[f].id] = JSON.parse('{\"stats\": { \"field\":\"' + facets[f].id + '\"}}');
                 break;
         }
+    }
+
+    // create the sort object
+    if (params[5] && params[5].hasOwnProperty('field')) {
+        var sort = [];
+        var sortObject = {};
+        sortObject[params[5].field] = {order: params[5].asc };
+        sort.push(sortObject);
+        q.sort = sort;
     }
 
     // assign the object to aggs
@@ -209,13 +220,16 @@ function formatSearchResultsForTable(data, facets, params) {
         // generate the column headers (caching opportunity)
         var dataRow = rows[0];
         _.each(dataRow._source, function (o, row) {
-            columnHeaders.push(data._meta[row].text);
+            columnHeaders.push({
+                id: row,
+                text: data._meta[row].text
+            });
         });
 
         // add each column
         _.each(columnHeaders, function (column) {
-            streamTable += '\<th\>';
-            streamTable += column;
+            streamTable += '\<th id="' + column.id + '"\>';
+            streamTable += column.text;
             streamTable += '\</th\>';
         });
         streamTable += '\</tr\>';

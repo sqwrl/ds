@@ -16,7 +16,7 @@ var notificationClassName = {
 };
 var tableResults = '<thead>';
 var tableSettings = {
-    sortColumnIndex: -1,
+    sortColumnId: '',
     sortColumnDirection: 'asc',
     numberOfFixedColumns: 0
 };
@@ -296,7 +296,7 @@ function redrawTableOnResize() {
     makeTable();
 }
 
-function updateResultsWithFilter(delay) {
+function updateResultsWithFilter(delay, sort) {
 
     var doUpdate = function() {
         // loop through the facets and capture the state
@@ -379,6 +379,7 @@ function updateResultsWithFilter(delay) {
             indexField: $('#indexField').prop('name'),
             strSearch: $('#strSearch').val(),
             filters: JSON.stringify(state),
+            sort: sort,
             first: false
         });
     };
@@ -426,9 +427,50 @@ function makeTable() {
         sort: true
     });
 
+    // recreating the table removes the existing sorting indicators.
+    // reapply if applicable
+    if (tableSettings.sortColumnId !== '') {
+        var column1 = $('#results').find('[id="' + tableSettings.sortColumnId + '"]');
+        var column2 = $('table.ft_r [id="' + tableSettings.sortColumnId + '"]');
+        if (tableSettings.sortColumnDirection === 'desc') {
+            $(column2).addClass('fx_sort_desc');
+            $(column1).addClass('sorttable_sorted_reverse');
+            var sortrevind = document.createElement('span');
+            sortrevind.id = "sorttable_sortrevind";
+            sortrevind.innerHTML = stIsIE ? '&nbsp<font face="webdings">5</font>' : '&nbsp;&#x25B4;';
+            $(column1).append(sortrevind);
+        }
+        if (tableSettings.sortColumnDirection === 'asc') {
+            $(column2).addClass('fx_sort_asc');
+            $(column1).addClass('sorttable_sorted');
+            var sortfwdind = document.createElement('span');
+            sortfwdind.id = "sorttable_sortfwdind";
+            sortfwdind.innerHTML = stIsIE ? '&nbsp<font face="webdings">6</font>' : '&nbsp;&#x25BE;';
+            $(column1).append(sortfwdind);
+        }
+    }
+
     $table.addClass('disabled');
     $('#numberOfColumns').val(tableSettings.numberOfFixedColumns);
 }
+
+function doSort(column) {
+    var name = $(column).attr('id');
+    var css = $('#results').find('[id="' + name + '"]').attr('class');
+    var idxr = css.indexOf('sorttable_sorted_reverse');
+    var idx = css.indexOf('sorttable_sorted');
+    var direction = 'asc';
+    if (idxr > -1) direction = 'asc';
+    if (idxr === -1 && idx > -1) direction = 'desc';
+    var sort = {
+        field: name,
+        asc: direction
+    };
+    tableSettings.sortColumnId = name;
+    tableSettings.sortColumnDirection = direction;
+    updateResultsWithFilter(false, sort);
+}
+
 
 /**
  * Generic functions
@@ -496,7 +538,7 @@ function createSlider(slider, min, max) {
         updateResultsWithFilter(true);
     });
 
-    $('#' + slider.id + '_from').on('change', function () {
+    $(sliderFrom).on('change', function () {
         if (type !== 'date') {
             slider.noUiSlider.set([this.value, null]);
         } else {
@@ -504,7 +546,7 @@ function createSlider(slider, min, max) {
         }
         updateResultsWithFilter(true);
     });
-    $('#' + slider.id + '_to').on('change', function () {
+    $(sliderTo).on('change', function () {
         if ($(sliderTo).attr('type') !== 'date') {
             slider.noUiSlider.set([null, this.value]);
         } else {

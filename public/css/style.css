@@ -156,6 +156,8 @@ tbody tr:hover td {
     width: 100% !important;
     background-color: transparent !important;
     border-style: none !important;
+    color: #337ab7 !important;
+    text-decoration: underline !important;
 }
 
 #popSubTable {

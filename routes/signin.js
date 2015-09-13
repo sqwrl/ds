@@ -5,7 +5,7 @@
 var config      = require('config').login;
 
 function index(req, res) {
-    res.render('signin', {title:'Login'});
+    res.render('signin', {title:'Login', user:'Guest'});
 }
 
 function login(req, res) {
@@ -13,9 +13,8 @@ function login(req, res) {
         req.session.userName = config.username;
         res.send('');
     } else {
-        res.send("Wrong credentials!!");
+        res.send('Wrong credentials!!');
     }
-
 }
 
 exports.index = index;

@@ -15,13 +15,14 @@ html
                             img(src='/images/sqwrl-logo.png')
                         .collapse.navbar-collapse
                             block operations
-                            ul.nav.navbar-nav.navbar-right
-                                li
-                                    a(href='/logout') Logout
+                                ul.nav.navbar-nav.navbar-right
+                                    if user != 'Guest'
+                                        li
+                                            a(href='/logout') Logout
                             block welcome
                                 ul.nav.navbar-nav.navbar-right
                                     li
-                                        a Welcome, Guest
+                                        a Welcome, #{user}
                             block details
             block content
                 div(id='content')

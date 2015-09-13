@@ -11,7 +11,14 @@ var config          = require('config'),
  * Main page rendering entry
  */
 function index(req, res) {
-    res.render('main', {title:'Shop!'});
+    logger.info(req.session.userName, 'user');
+    if (req.session.hasOwnProperty('userName') && req.session.userName !== 'Guest') {
+        logger.info('render main');
+        res.render('main', {title: 'Shop!', user: req.session.userName});
+    } else {
+        logger.info('render signin');
+        res.redirect('/signin');
+    }
 }
 
 

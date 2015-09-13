@@ -83,11 +83,23 @@ function doSearch(params, res, callback) {
                 if (index.types[i].type === params[1]) {
                     var fields = index.types[i].fields;
                     for (var f=0; f < fields.length; f++) {
-                        if (fields[f].facet) {
-                            facets.push({
-                                id: fields[f].id,
-                                type: fields[f].type
-                            });
+                        if (fields[f].type !== 'nested') {
+                            if (fields[f].facet) {
+                                facets.push({
+                                    id: fields[f].id,
+                                    type: fields[f].type
+                                });
+                            }
+                        } else {
+                            var nestedFields = fields[f].fields;
+                            for (var n=0; n < nestedFields.length; n++) {
+                                if (nestedFields[n].facet) {
+                                    facets.push({
+                                        id: fields[f].id + '.' + nestedFields[n].id,
+                                        type: nestedFields[n].type
+                                    });
+                                }
+                            }
                         }
                     }
                 }
@@ -165,7 +177,7 @@ function doSearch(params, res, callback) {
         q.aggs = facetObject;
     }
 
-    logger.info(q, 'doSearch query');
+    logger.debug(q, 'doSearch query');
 
     request({
         method: 'POST',
@@ -180,6 +192,7 @@ function doSearch(params, res, callback) {
                 callback(err, {});
             } else {
                 var searchResult = body;
+                logger.debug(searchResult, 'search results');
                 getIndexMapping(params[0], params[1], function(err, result) {
                     if (!err) {
                         if (result.body.length > 2) {
@@ -222,13 +235,18 @@ function formatSearchResultsForTable(data, facets, params) {
         _.each(dataRow._source, function (o, row) {
             columnHeaders.push({
                 id: row,
-                text: data._meta[row].text
+                text: data._meta[row].text,
+                type: data._meta[row].type
             });
         });
 
         // add each column
         _.each(columnHeaders, function (column) {
-            streamTable += '\<th id="' + column.id + '"\>';
+            var noSortClass = '';
+            if (column.type === 'nested') {
+                noSortClass = 'class=\"nosort\"';
+            }
+            streamTable += '\<th id="' + column.id + '" ' + noSortClass + '\>';
             streamTable += column.text;
             streamTable += '\</th\>';
         });
@@ -237,25 +255,33 @@ function formatSearchResultsForTable(data, facets, params) {
 
         // add each row
         streamTable += '\<tbody\>';
+        var rowIndex = 0;
         _.each(rows, function(row) {
             streamTable += '\<tr\>';
             _.forEach(row._source, function(f, field) {
                 if (typeof f !== 'object') {
                     streamTable += '\<td\>' + f + '\<\/td\>';
                 } else {
-                    // TODO: add class for sub-table icon functionality and add hidden row(s) with sub-table format
-                    streamTable += '\<td\>' + field + '\<\/td\>';
+                    var number = '(' + f.length + ')';
+                    var link = '\<button class="btnSubTable" name="' + field + '|' + rowIndex + '\"\>' + number + '\<\/button\>';
+                    streamTable += '\<td\>' + link +  '\<\/td\>';
+
                 }
             });
             streamTable += '\<\/tr\>';
+            rowIndex ++;
         });
-        streamTable += '\<\/tbody\/\>';
+        streamTable += '\<\/tbody\>';
+        streamTable += '\<\/table\>';
+
+        results['raw'] = data;
     } else {
         if (data.error !== undefined) {
             logger.error(data.error, 'ERROR: formatSearchResultsForTable');
             streamTable += '\<tr\>\<td\>\"' + data.error + '\"\<\/tr\>\<\/td\>';
         } else {
             streamTable += noData;
+            results['raw'] = [];
         }
     }
 
@@ -278,7 +304,8 @@ function formatSearchResultsForTable(data, facets, params) {
                         var id = '';
                         var buckets = facetsData[facets[f].id].buckets;
                         if (buckets.length > 0) {
-                            streamFacets += '<li class="h5" id="' + params[0] + '--' + params[1] + '--' + facets[f].id + '">' + data._meta[facets[f].id].text;
+                            var facetTitle = generateFacetText(facets[f], data);
+                            streamFacets += '<li class="h6" id="' + params[0] + '--' + params[1] + '--' + facets[f].id + '">' + facetTitle;
                             for (var b = 0; b < buckets.length; b++) {
                                 id = params[0] + '--' + params[1] + '--' + buckets[b].key.replace(/ /g,'@%');
                                 eventHandlers.push(id);
@@ -287,43 +314,59 @@ function formatSearchResultsForTable(data, facets, params) {
                                 streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
                                 streamFacets += '</div>';
                             }
-                            streamFacets += '</li><br>';
+                            streamFacets += '</li>';
                         }
                     } else {
                         // create a range slider
                         var slider = facetsData[facets[f].id];
                         id = params[0] + '--' + params[1] + '--' + facets[f].id;
                         var type = (data._meta[facets[f].id].type === 'date') ? 'date' : 'text';
-                        streamFacets += '<li class="h5" id="' + id + '">' + data._meta[facets[f].id].text;
+                        streamFacets += '<li class="h6" id="' + id + '">' + data._meta[facets[f].id].text;
                         streamFacets += '<div class="range" id="' + id + '_slider" name="' + slider.min + '|' + slider.max + '"></div>';
                         if (type !== 'date') {
                             streamFacets += '<div><label class="facetlabel">From:</label><input class="facetinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetinput" id="' + id + '_slider_to" type="' + type + '"></div>';
                         } else {
                             streamFacets += '<div><label class="facetlabel">From:</label><input class="facetdateinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetdateinput" id="' + id + '_slider_to" type="' + type + '"></div>';
                         }
-                        streamFacets += '</li><br>';
+                        streamFacets += '</li>';
                     }
                 }
             }
 
-            // add click event handlers
-            streamFacets += '<script>\n';
-            streamFacets += 'var sliders = $("#facets").find("div.range");\n';
-            streamFacets += 'for (var s=0; s < sliders.length; s++) {\n';
-            streamFacets += '  var id = $(sliders[s]).prop("id");\n';
-            streamFacets += '  var name = $("#" + id).attr("name");\n';
-            streamFacets += '  var min = Number(name.substring(0, name.indexOf("|")));\n';
-            streamFacets += '  var max = Number(name.substring(name.indexOf("|") + 1, name.length));\n';
-            streamFacets += '  var slider = document.getElementById(id);\n';
-            streamFacets += '  createSlider(slider, min, max);\n';
-            streamFacets += '}\n';
-            streamFacets += '$("#facets").find("input:checkbox").click( function(e) { updateResultsWithFilter(false) });\n';
-            streamFacets += '</script>';
             results['facets'] = streamFacets;
         }
     }
 
     return results;
+}
+
+function generateFacetText(facet, data) {
+    var facetText = '';
+    if (facet['id'].indexOf('.') > 0) {
+        var prefix = '';
+        var pget = '';
+        var count = 0;
+        var p = 0, l = 0;
+        while (facet['id'].indexOf('.', l) > 0) {
+            p = facet['id'].indexOf('.', l);
+            if (count === 0) {
+                pget = facet.id.substring(0, p);
+            } else {
+                // we're diving into nested object of nested objects
+                // this logic is untested
+                pget = prefix + '.fields.' + facet.id.substring(l, p);
+            }
+            prefix += data._meta[pget].text + ': ';
+            l = p + 1;
+        }
+        var path = facet['id'].replace('.','.fields.') + '.text';
+        facetText = prefix + _.get(data._meta, path);
+    } else {
+        facetText = data._meta[facet.id].text;
+    }
+
+    return facetText;
+
 }
 
 function getIndexMapping(index, type, callback) {

@@ -18,7 +18,8 @@ var tableResults = '<thead>';
 var tableSettings = {
     sortColumnId: '',
     sortColumnDirection: 'asc',
-    numberOfFixedColumns: 0
+    numberOfFixedColumns: 0,
+    data: []
 };
 
 function login() {
@@ -278,12 +279,28 @@ function redrawResultsTable(data) {
     $('#results').html(data.table);
     // apply the header/column freezes
     if (data.table.indexOf(tableResults) > -1) {
+        tableSettings.data = data.raw;
         makeTable();
     }
 }
 
 function redrawFacets(data) {
-    $('#facets').html(data.facets);
+    var facets = $('#facets');
+    facets.html(data.facets);
+    facets.find("input:checkbox").off('click');
+    facets.find("input:checkbox").click( function() {
+        updateResultsWithFilter(false);
+    });
+
+    var sliders = $("#facets").find("div.range");
+    for (var s=0; s < sliders.length; s++) {
+        var id = $(sliders[s]).prop("id");
+        var name = $("#" + id).attr("name");
+        var min = Number(name.substring(0, name.indexOf("|")));
+        var max = Number(name.substring(name.indexOf("|") + 1, name.length));
+        var slider = document.getElementById(id);
+        createSlider(slider, min, max);
+    }
 }
 
 function redrawTableOnResize() {
@@ -373,6 +390,7 @@ function updateResultsWithFilter(delay, sort) {
         }
 
         // submit another search with the selected filters
+        setPopupSubTableHidden();
         updateResults({
             indexName: state.index,
             indexType: state.type,
@@ -385,7 +403,7 @@ function updateResultsWithFilter(delay, sort) {
     };
 
     function manageSliderUpdate() {
-        // since the events are set to change, it's not capturing a lot of intermediate steps
+        // since the events are set to the change event, it's not capturing a lot of intermediate steps
         // so this timeout is not super necessary and timeout is reduced to 50 miliseconds
         window.clearTimeout(timer);
         timer = window.setTimeout(doUpdate, 50);
@@ -452,6 +470,11 @@ function makeTable() {
 
     $table.addClass('disabled');
     $('#numberOfColumns').val(tableSettings.numberOfFixedColumns);
+    addSubTableClickHandlers();
+
+    // check for nested document columns and remove sorting ability
+    $('table').find('.nosort').removeClass('fx_sort_bg');
+
 }
 
 function doSort(column) {
@@ -471,6 +494,94 @@ function doSort(column) {
     updateResultsWithFilter(false, sort);
 }
 
+/**
+ * Showing/hiding subtables
+ */
+function addSubTableClickHandlers() {
+    var btnSubTables = $('button.btnSubTable');
+    btnSubTables.off('click');
+    btnSubTables.click(function () {
+        addSubTableToPopup(this);
+        var parent = this.parentElement;
+        var st = $('#popSubTable');
+        var bodyRect = document.body.getBoundingClientRect();
+        var tdRect = parent.getBoundingClientRect();
+        var t = tdRect.top - bodyRect.top + parent.offsetHeight;
+        st.removeClass('hidden');
+        var l = tdRect.left + tdRect.width - document.getElementById('popSubTable').getBoundingClientRect().width;
+
+        st.css('top', t);
+        st.css('left', l);
+        // add close click handler
+        $('.closemsg').on('click', function() {
+            $('.closemsg').off('click');
+            st.css('top', -2000);
+            setPopupSubTableHidden();
+        });
+
+    });
+}
+
+function addSubTableToPopup(btn) {
+    var popup = $('#popSubTable');
+    var target = $(btn).prop('name').split('|');
+    var field = target[0];
+    var rowIndex = Number(target[1]);
+    var tblData = tableSettings.data.hits.hits[rowIndex];
+
+    // create the subtable
+    var t = '<table class="table-responsive"><thead>';
+    var firstRow = tblData._source[field][0];
+    var columnHeaders = [];
+
+    // generate the column headers
+    forEach(firstRow, function (o, row) {
+        columnHeaders.push({
+            id: row,
+            text: tableSettings.data._meta[field].fields[row].text
+        });
+    });
+
+    // add each column
+    forEach(columnHeaders, function (column) {
+        t += '\<th id="' + column.id + '"\>';
+        t += column.text;
+        t += '\</th\>';
+    });
+    t += '\</tr\>';
+    t += '\<\/thead\>';
+
+    // add the rows
+    t += '\<tbody\>';
+    var rowCount = 0;
+    forEach(tblData._source[field], function(row) {
+        t += '\<tr\>';
+        forEach(row, function(f, field) {
+            if (typeof f !== 'object') {
+                t += '\<td id="' + f + '"\>' + f + '\<\/td\>';
+            } else {
+                var number = '(' + f.length + ')';
+                var link = '\<button class="btnSubTable" name="' + field + '|' + rowCount + '\"\>' + number + '\<\/button\>';
+                t += '\<td\>' + link +  '\<\/td\>';
+
+            }
+        });
+        t += '\<\/tr\>';
+        rowCount ++;
+    });
+
+    t += '\<\/tbody\>';
+    t += '\<\/table\>';
+
+    popup.html(t);
+}
+
+function setPopupSubTableHidden() {
+    var popup = $('#popSubTable');
+    if (!popup.hasClass('hidden')) {
+        popup.addClass('hidden');
+    }
+}
 
 /**
  * Generic functions

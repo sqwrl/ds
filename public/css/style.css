@@ -55,10 +55,20 @@
     width: 140px;
 }
 
+.selOptions {
+    width: 75px;
+}
+
 .caret {
     margin-left: -15px !important;
     margin-right: 5px !important;
     color:white !important;
+}
+
+#optionsCaret.caret {
+    margin-left: -15px !important;
+    margin-right: 5px !important;
+    color: black !important;
 }
 
 #export {
@@ -122,6 +132,10 @@
     margin-top: -23px;
 }
 
+.noUi-pips {
+    font: 400 11px Arial;
+}
+
 #numberOfColumns {
     width: 40px;
 }
@@ -136,4 +150,69 @@ tbody tr:nth-child(2n+1) td {
 
 tbody tr:hover td {
     background-color:#add8e6 !important;
+}
+
+.btnSubTable {
+    width: 100% !important;
+    background-color: transparent !important;
+    border-style: none !important;
+}
+
+#popSubTable {
+    display: table;
+    width: 300px;
+    height: 300px;
+    background-color: #ffffff;
+    opacity: 0.90;
+    position: absolute;
+    overflow: auto;
+    border: 1px #000000 solid;
+    border-radius: 10px;
+    z-index: 6000;
+}
+
+#popSubTable table {
+    padding: 8px;
+    display: table;
+}
+
+#popSubTable th {
+    padding-left: 4px;
+    padding-right: 10px;
+}
+
+#popSubTable td {
+    padding: 2px 4px;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+#popSubTable .closemsg {
+    display: block;
+    margin: auto;
+    height: 0;
+    overflow: visible;
+    text-align: right;
+    z-index: 6002;
+    cursor: default;
+}
+
+.closemsg::after {
+    content: "\00D7";
+    display: inline-block;
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    z-index: 6003;
+    color: #ffffff;
+    border: 1px #ffffff solid;
+    border-radius: 10px;
+    width: 20px;
+    height: 20px;
+    line-height: 18px;
+    text-align: center;
+    margin: 0;
+    background-color: #f0ad4e;
+    font-weight: bold;
+    cursor: pointer;
 }

@@ -28,6 +28,7 @@ block content
                                 });
                             });
                             var fetchData = function () {
+                                setPopupSubTableHidden();
                                 updateResults({
                                     indexName: $('#indexName').prop('name'),
                                     indexType: $('#indexType').prop('name'),
@@ -65,7 +66,7 @@ block content
                             span.dropdown
                                 button.btn-sm.btn-default.dropdown-toggle.selOptions(id='options', name='options', type='button' data-toggle='dropdown')
                                     span(id='optionsBtnText') Options
-                                span.caret
+                                span.caret(id='optionsCaret')
                                 ul.dropdown-menu(id='optionsMenu')
                                     li.disabled(id='optionExport')
                                         a#btnExport(onclick='exportTable()')
@@ -79,5 +80,7 @@ block content
                     block table
             div.container-fluid
                 div.row
+                    div.container-fluid.hidden.closemsg(id='popSubTable')
+                        p
                     div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main(id='resultsTable')
                         table.table(id='results')

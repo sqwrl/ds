@@ -132,6 +132,27 @@
     margin-top: -23px;
 }
 
+.checkbox+.checkbox, .radio+.radio {
+    margin-top: -10px !important;
+}
+
+input[type=checkbox], input[type=radio] {
+    margin: 0;
+}
+
+.moreOrLessLabel {
+    padding-left:175px !important;
+    color:#337ab7 !important;
+}
+
+.moreOrLessCheckbox {
+    visibility: collapse !important;
+}
+
+.collapsed {
+    display: none;
+}
+
 .noUi-pips {
     font: 400 11px Arial;
 }

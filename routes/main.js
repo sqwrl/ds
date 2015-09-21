@@ -119,13 +119,17 @@ function doSearch(params, res, callback) {
     for (var f=0; f<facets.length; f++) {
         switch (facets[f].type) {
             case 'string':
-                facetObject[facets[f].id] = JSON.parse('{\"terms\":{\"field\":\"' + facets[f].id + '.raw\",\"order\":{\"_count\":\"desc\"}}}');
+                facetObject[facets[f].id] = JSON.parse('{' + '\"terms\":{' + '\"field\":\"' + facets[f].id + '.raw\", \"size\": 0, \"order\":{\"_count\":\"desc\"}}}');
                 break;
             case 'float':
             case 'integer':
             case 'long':
             case 'date':
-                facetObject[facets[f].id] = JSON.parse('{\"stats\": { \"field\":\"' + facets[f].id + '\"}}');
+                facetObject[facets[f].id] = JSON.parse('{' +
+                    '\"stats\": { ' +
+                        '\"field\":\"' + facets[f].id + '\"' +
+                        '}' +
+                    '}');
                 break;
         }
     }
@@ -199,7 +203,7 @@ function doSearch(params, res, callback) {
                 callback(err, {});
             } else {
                 var searchResult = body;
-                logger.debug(searchResult, 'search results');
+                logger.info(searchResult, 'search results');
                 getIndexMapping(params[0], params[1], function(err, result) {
                     if (!err) {
                         if (result.body.length > 2) {
@@ -312,13 +316,22 @@ function formatSearchResultsForTable(data, facets, params) {
                         var buckets = facetsData[facets[f].id].buckets;
                         if (buckets.length > 0) {
                             var facetTitle = generateFacetText(facets[f], data);
-                            streamFacets += '<li class="h6" id="' + params[0] + '--' + params[1] + '--' + facets[f].id + '">' + facetTitle;
+                            var facetId = params[0] + '--' + params[1] + '--' + facets[f].id;
+                            streamFacets += '<li class="h6" id="' + facetId + '">' + facetTitle;
                             for (var b = 0; b < buckets.length; b++) {
                                 id = params[0] + '--' + params[1] + '--' + buckets[b].key.replace(/ /g,'@%');
                                 eventHandlers.push(id);
-                                streamFacets += '<div class="checkbox">';
+                                streamFacets += (b <= 4) ? '<div class="checkbox">' : '<div class="checkbox collapsed">';
                                 streamFacets += '<label><input type="checkbox" id="' + id + '"/>';
                                 streamFacets += buckets[b].key + ' (' + buckets[b].doc_count + ')</label>';
+                                streamFacets += '</div>';
+                            }
+                            if (b > 4) {
+                                streamFacets += '<div class="checkbox">';
+                                streamFacets += '<label class="moreOrLessLabel"><input type="checkbox" class="moreOrLessCheckbox" id="more--' + facetId + '"/>More</label>';
+                                streamFacets += '</div>';
+                                streamFacets += '<div class="checkbox collapsed">';
+                                streamFacets += '<label class="moreOrLessLabel"><input type="checkbox" class="moreOrLessCheckbox" id="less--' + facetId + '"/>Less</label>';
                                 streamFacets += '</div>';
                             }
                             streamFacets += '</li>';

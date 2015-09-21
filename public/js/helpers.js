@@ -289,7 +289,7 @@ function redrawFacets(data) {
     facets.html(data.facets);
     facets.find("input:checkbox").off('click');
     facets.find("input:checkbox").click( function() {
-        updateResultsWithFilter(false);
+        updateResultsWithFilter(false, null, this);
     });
 
     var sliders = $("#facets").find("div.range");
@@ -313,7 +313,39 @@ function redrawTableOnResize() {
     makeTable();
 }
 
-function updateResultsWithFilter(delay, sort) {
+function updateResultsWithFilter(delay, sort, source) {
+
+    // if this is a More/Less checkbox then managae facet list and return without submitting a query
+    if (source && source !== undefined && (source.id.substring(0,4) === 'more' || source.id.substring(0,4) === 'less')) {
+        $(source).prop('checked', false);
+        var expand = (source.id.substring(0,4) === 'more');
+        var parent = $(source).parent().parent().parent();
+        var li = $(parent).find('div.checkbox');
+        for (var c=0; c < li.length; c++) {
+            var chkb = $(li[c]);
+            switch(expand) {
+                case true:
+                    if (chkb.hasClass('collapsed')) {
+                        chkb.removeClass('collapsed');
+                    }
+                    if (c === li.length - 2) {
+                        // set More to hidden
+                        chkb.addClass('collapsed');
+                    }
+                    break;
+                case false:
+                    if (!chkb.hasClass('collapsed') && c > 4) {
+                        chkb.addClass('collapsed');
+                    }
+                    if (c === li.length - 2) {
+                        chkb.removeClass('collapsed');
+                    }
+                    break;
+            }
+        }
+
+        return;
+    }
 
     var doUpdate = function() {
         // loop through the facets and capture the state
@@ -492,6 +524,14 @@ function doSort(column) {
     tableSettings.sortColumnId = name;
     tableSettings.sortColumnDirection = direction;
     updateResultsWithFilter(false, sort);
+}
+
+/**
+ * Showing/hiding facets
+ */
+function moreOrLess() {
+    console.log(this);
+    console.log(e);
 }
 
 /**

@@ -264,7 +264,11 @@ function updateResults(index) {
             data: index
         }).done(function (data) {
             redrawResultsTable(data);
-            if (index.first) redrawFacets(data);
+            if (index.first) {
+                drawFacets(data)
+            } else {
+                updateFacetCounts(data);
+            };
             manageExportToExcelButton(data.table);
         }).fail(function (jqXHR, textStatus) {
             $('#results').html(textStatus);
@@ -284,20 +288,82 @@ function redrawResultsTable(data) {
     }
 }
 
-function redrawFacets(data) {
+function updateFacetCounts(data) {
+    var mainFacets = $('#facets').find('li.h6');
+    for (var f=0; f < mainFacets.length; f++) {
+        var facetId = $(mainFacets[f]).attr('id');
+        var strBucket = facetId.substring(facetId.lastIndexOf('-')+1, facetId.length);
+
+        //get the aggregation data
+        var aggData = data.raw.aggregations[strBucket].buckets || [];
+
+        //loop through each of the facets
+        var subFacets = $('#' + facetId).find('label');
+        for (var s=0; s < subFacets.length; s++) {
+            var sf = $(subFacets[s]);
+            if (!sf.hasClass('moreOrLessLabel')) {
+                var label = sf.text();
+                var lioOpen = label.lastIndexOf('(');
+                var lioClose = label.lastIndexOf(')');
+                var ioSledge = label.lastIndexOf('/');
+                var mainCount = 0, newCount = 0;
+
+                //loop through the buckets to find the new count
+                for (var b = 0; b < aggData.length; b++) {
+                    if (aggData[b].key === label.substring(0, lioOpen - 1)) {
+                        newCount = aggData[b].doc_count;
+                        break;
+                    }
+                }
+
+                //create the new count string
+                var strCount = '';
+                if (ioSledge == -1) {
+                    //there's no x/y and we need to insert/format
+                    mainCount = Number(label.substring(lioOpen + 1, lioClose));
+                } else {
+                    //there's already a x/y count: replace
+                    mainCount = Number(label.substring(ioSledge + 1, lioClose));
+                }
+                strCount = newCount + '/' + mainCount;
+
+                //update the facet
+                // - capture the before state and remove the listener
+                var sfcb1 = sf.find('input:checkbox')[0];
+                var checked = $(sfcb1).prop('checked');
+                $(sfcb1).off('click');
+
+                // - update the label
+                var newLabel = label.substring(0, lioOpen - 1) + ' (' + strCount + ')';
+                var html = sf.html();
+                var newHtml = html.replace(label, newLabel);
+                sf.html(newHtml);
+
+                // - reset the state and add back the event listener
+                var sfcb2 = sf.find('input:checkbox')[0];
+                $(sfcb2).click( function() {
+                    updateResultsWithFilter(false, null, this);
+                });
+                $(sfcb2).prop('checked', checked);
+            }
+        }
+    }
+}
+
+function drawFacets(data) {
     var facets = $('#facets');
     facets.html(data.facets);
-    facets.find("input:checkbox").off('click');
-    facets.find("input:checkbox").click( function() {
+    facets.find('input:checkbox').off('click');
+    facets.find('input:checkbox').click( function() {
         updateResultsWithFilter(false, null, this);
     });
 
-    var sliders = $("#facets").find("div.range");
+    var sliders = $('#facets').find('div.range');
     for (var s=0; s < sliders.length; s++) {
-        var id = $(sliders[s]).prop("id");
-        var name = $("#" + id).attr("name");
-        var min = Number(name.substring(0, name.indexOf("|")));
-        var max = Number(name.substring(name.indexOf("|") + 1, name.length));
+        var id = $(sliders[s]).prop('id');
+        var name = $('#' + id).attr('name');
+        var min = Number(name.substring(0, name.indexOf('|')));
+        var max = Number(name.substring(name.indexOf('|') + 1, name.length));
         var slider = document.getElementById(id);
         createSlider(slider, min, max);
     }
@@ -315,7 +381,7 @@ function redrawTableOnResize() {
 
 function updateResultsWithFilter(delay, sort, source) {
 
-    // if this is a More/Less checkbox then managae facet list and return without submitting a query
+    // if this is a More/Less checkbox then manage facet list and return without submitting a query
     if (source && source !== undefined && (source.id.substring(0,4) === 'more' || source.id.substring(0,4) === 'less')) {
         $(source).prop('checked', false);
         var expand = (source.id.substring(0,4) === 'more');

@@ -344,9 +344,9 @@ function formatSearchResultsForTable(data, facets, params) {
                         streamFacets += '<li class="h6" id="' + id + '">' + data._meta[facets[f].id].text;
                         streamFacets += '<div class="range" id="' + id + '_slider" name="' + slider.min + '|' + slider.max + '"></div>';
                         if (type !== 'date') {
-                            streamFacets += '<div><label class="facetlabel">From:</label><input class="facetinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetinput" id="' + id + '_slider_to" type="' + type + '"></div>';
+                            streamFacets += '<div class="rangeFromTo"><label class="facetlabel">From:</label><input class="facetinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetinput" id="' + id + '_slider_to" type="' + type + '"></div>';
                         } else {
-                            streamFacets += '<div><label class="facetlabel">From:</label><input class="facetdateinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetdateinput" id="' + id + '_slider_to" type="' + type + '"></div>';
+                            streamFacets += '<div class="rangeFromTo"><label class="facetlabel">From:</label><input class="facetdateinput" id="' + id + '_slider_from" type="' + type + '"><label class="facetlabel"> To:</label><input class="facetdateinput" id="' + id + '_slider_to" type="' + type + '"></div>';
                         }
                         streamFacets += '</li>';
                     }

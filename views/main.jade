@@ -18,6 +18,11 @@ block content
             div.container-fluid
                 div.row
                     div.col-sm-3.col-md-2.sidebar
+                        div(id='filterBox')
+                            span
+                                input.hidden(id='facetFilter', placeholder='Enter facet filter here...')
+                                button.btn-sm.btn-default.open.hidden(id='removeFilter')
+                                    div.openeye(id='eye')
                         ul.nav.nav-sidebar(id='facets')
                     div.col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
                         script(type='text/javascript').
@@ -70,7 +75,7 @@ block content
                                 ul.dropdown-menu(id='optionsMenu')
                                     li.disabled(id='optionExport')
                                         a#btnExport(onclick='exportTable()')
-                                            img(src="images/xls.png", height="15px")
+                                            img(src='images/xls.png', height='15px')
                                             | .xls
                                     li.divider
                                     li.disabled(id='optionFixedColumns')

@@ -116,6 +116,44 @@
     background: #424242 !important;
 }
 
+#filterBox {
+    position:fixed;
+    margin-top: -20px;
+    margin-left: -20px;
+    width: 225px;
+    background-color: #ffffff;
+    z-index: 5000;
+}
+
+#facetFilter {
+    width: 190px;
+}
+
+#removeFilter {
+    border:0;
+    padding: 12px 0 5px 7px;
+    z-index: 5001;
+    width: 30px;
+    height: 20px;
+}
+
+#eye {
+    width: 20px;
+    height: 20px;
+    position: fixed;
+    margin-top: -15px;
+}
+
+#eye.openeye {
+    background: url(../images/glyphicons-52-eye-open.png) no-repeat center center;
+    background-size: contain;
+}
+
+#eye.closeeye {
+    background: url(../images/glyphicons-53-eye-close.png) no-repeat center center;
+    background-size: contain;
+}
+
 .facetlabel {
     padding-left: 10px;
     font-weight: 400;
@@ -132,8 +170,9 @@
     margin-top: -23px;
 }
 
-.checkbox+.checkbox, .radio+.radio {
-    margin-top: -10px !important;
+.checkbox, .checkbox+.checkbox, .radio+.radio {
+    margin-top: 5px !important;
+    margin-bottom: 0 !important;
 }
 
 input[type=checkbox], input[type=radio] {

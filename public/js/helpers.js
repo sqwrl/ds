@@ -170,30 +170,36 @@ function manageIndexDropDowns() {
     populateIndex();
 }
 
+function addClass(elem, css) {
+    if (!elem.hasClass(css)) {
+        elem.addClass(css);
+    }
+}
+
+function removeClass(elem, css) {
+    if (elem.hasClass(css)) {
+        elem.removeClass(css);
+    }
+}
+
 function manageExportToExcelButton(data) {
     var optionExport = $('#optionExport');
     var optionFixedCoumns = $('#optionFixedColumns');
     var inputNumberOfCoumns = $('#numberOfColumns');
+    var facetFilter = $('#facetFilter');
+    var removeFilter = $('#removeFilter');
     if (data.indexOf(tableResults) === -1) {
-        if (!optionExport.hasClass('disabled')) {
-            optionExport.addClass('disabled');
-        }
-        if (!optionFixedCoumns.hasClass('disabled')) {
-            optionFixedCoumns.addClass('disabled');
-        }
-        if (!inputNumberOfCoumns.hasClass('disabled')) {
-            inputNumberOfCoumns.addClass('disabled');
-        }
+        addClass(optionExport, 'disabled');
+        addClass(optionFixedCoumns, 'disabled');
+        addClass(inputNumberOfCoumns, 'disabled');
+        addClass(facetFilter, 'hidden');
+        addClass(removeFilter, 'hidden');
     } else {
-        if (optionExport.hasClass('disabled')) {
-            optionExport.removeClass('disabled');
-        }
-        if (optionFixedCoumns.hasClass('disabled')) {
-            optionFixedCoumns.removeClass('disabled');
-        }
-        if (inputNumberOfCoumns.hasClass('disabled')) {
-            inputNumberOfCoumns.removeClass('disabled');
-        }
+        removeClass(optionExport, 'disabled');
+        removeClass(optionFixedCoumns, 'disabled');
+        removeClass(inputNumberOfCoumns, 'disabled');
+        removeClass(facetFilter, 'hidden');
+        removeClass(removeFilter, 'hidden');
     }
 }
 
@@ -268,7 +274,7 @@ function updateResults(index) {
                 drawFacets(data)
             } else {
                 updateFacetCounts(data);
-            };
+            }
             manageExportToExcelButton(data.table);
         }).fail(function (jqXHR, textStatus) {
             $('#results').html(textStatus);
@@ -340,6 +346,7 @@ function updateFacetCounts(data) {
                 sf.html(newHtml);
 
                 // - reset the state and add back the event listener
+                //since the html has changed, a renewed selection is necessary
                 var sfcb2 = sf.find('input:checkbox')[0];
                 $(sfcb2).click( function() {
                     updateResultsWithFilter(false, null, this);
@@ -367,6 +374,133 @@ function drawFacets(data) {
         var slider = document.getElementById(id);
         createSlider(slider, min, max);
     }
+
+    // add facet filter change listener
+    var ff = $('#facetFilter');
+    ff.off('keydown');
+    ff.on('keydown', function(e) {
+        keypressFilter(e.keyCode);
+    });
+
+    //add the remove filter click handler
+    var rf = $('#removeFilter');
+    rf.off('click');
+    rf.on('click', function() {
+        var fb = $('#facetFilter');
+        fb.val('');
+        keypressFilter(8);
+        fb.focus();
+    });
+}
+
+function keypressFilter(e) {
+    //do some regex valid character checking?
+    var sliders = $('li > .range'), s, label, idx;
+    var filterVal = '';
+    var ff = $('#facetFilter');
+    var val = ff.val();
+    if (e === 8) {
+        //backspace
+        filterVal = (val.length > 0) ? val.substring(0, val.length - 1) : '';
+    } else {
+        filterVal = val + String.fromCharCode(e).toLowerCase();
+    }
+
+    var eye = $('#eye');
+
+    if (filterVal !== '') {
+        // set the remove filter icon
+        eye.removeClass('openeye').addClass('closeeye');
+        // make all facets visible
+        pressMoreOrLess('more');
+
+        //then filter checkbox facets
+        var facets = $('#facets').find('li').find('label');
+        for (var v = 0; v < facets.length; v++) {
+            if (!$(facets[v]).hasClass('facetlabel')) {
+                label = $(facets[v]).text().toLowerCase();
+                idx = (label !== '') ? label.indexOf(filterVal) : -2;
+
+                if (idx === -2) {
+                    //there are no filters
+
+                } else if (idx === -1) {
+                    //there's a filter but no facets meet the criteria
+                    addClass($(facets[v]).parent(), 'collapsed');
+                } else {
+                    removeClass($(facets[v]).parent(), 'collapsed');
+                }
+            }
+        }
+
+        //then filter slider facets
+        for (s=0; s < sliders.length; s++) {
+            var html = $(sliders[s]).parent().html();
+            label = html.substring(0, html.indexOf('<')).toLowerCase();
+            idx = (label !== '') ? label.indexOf(filterVal) : -2;
+            if (idx === -2) {
+                //there are no filters
+            } else if (idx === -1) {
+                //there's a filter but no facets meet the criteria
+                addClass($(sliders[s]), 'collapsed');
+                addClass($(sliders[s]).parent().find('.rangeFromTo'), 'collapsed');
+            } else {
+                removeClass($(sliders[s]), 'collapsed');
+                removeClass($(sliders[s]).parent().find('.rangeFromTo'), 'collapsed');
+            }
+        }
+    } else {
+        //filter has been removed. First make all checkbox facets visible and then bring back to original less state
+        pressMoreOrLess('more');
+        pressMoreOrLess('less');
+
+        //show all sliders again
+        for (s=0; s < sliders.length; s++) {
+            removeClass($(sliders[s]), 'collapsed');
+            removeClass($(sliders[s]).parent().find('.rangeFromTo'), 'collapsed');
+        }
+
+        // set the remove filter icon
+        eye.removeClass('closeeye').addClass('openeye');
+    }
+}
+
+function pressMoreOrLess(ml) {
+    var cb = $('.moreOrLessCheckbox');
+    for (var m = 0; m < cb.length; m++) {
+        if (cb[m].id.substring(0, 4) === ml) {
+            moreOrLess(cb[m]);
+        }
+    }
+}
+
+function moreOrLess(source) {
+    $(source).prop('checked', false);
+    var expand = (source.id.substring(0,4) === 'more');
+    var parent = $(source).parent().parent().parent();
+    var li = $(parent).find('div.checkbox');
+    for (var c=0; c < li.length; c++) {
+        var chkb = $(li[c]);
+        switch(expand) {
+            case true:
+                if (chkb.hasClass('collapsed')) {
+                    chkb.removeClass('collapsed');
+                }
+                if (c === li.length - 2) {
+                    // set More to hidden
+                    chkb.addClass('collapsed');
+                }
+                break;
+            case false:
+                if (!chkb.hasClass('collapsed') && c > 4) {
+                    chkb.addClass('collapsed');
+                }
+                if (c === li.length - 2) {
+                    chkb.removeClass('collapsed');
+                }
+                break;
+        }
+    }
 }
 
 function redrawTableOnResize() {
@@ -383,136 +517,110 @@ function updateResultsWithFilter(delay, sort, source) {
 
     // if this is a More/Less checkbox then manage facet list and return without submitting a query
     if (source && source !== undefined && (source.id.substring(0,4) === 'more' || source.id.substring(0,4) === 'less')) {
-        $(source).prop('checked', false);
-        var expand = (source.id.substring(0,4) === 'more');
-        var parent = $(source).parent().parent().parent();
-        var li = $(parent).find('div.checkbox');
-        for (var c=0; c < li.length; c++) {
-            var chkb = $(li[c]);
-            switch(expand) {
-                case true:
-                    if (chkb.hasClass('collapsed')) {
-                        chkb.removeClass('collapsed');
-                    }
-                    if (c === li.length - 2) {
-                        // set More to hidden
-                        chkb.addClass('collapsed');
-                    }
-                    break;
-                case false:
-                    if (!chkb.hasClass('collapsed') && c > 4) {
-                        chkb.addClass('collapsed');
-                    }
-                    if (c === li.length - 2) {
-                        chkb.removeClass('collapsed');
-                    }
-                    break;
-            }
-        }
-
+        moreOrLess(source);
         return;
-    }
-
-    var doUpdate = function() {
-        // loop through the facets and capture the state
-        var index = '';
-        var type = '';
-        var state = [];
-        var addedFieldValue = false;
-        var fieldObject = {};
-        // get all the UI facets
-        var facets = $('#facets').find('li');
-        for (var f = 0; f < facets.length; f++) {
-            var facet = facets[f];
-            // only 1x capture the index and type so that we know how to resubmit the search
-            if (f === 0) {
-                var id = $(facet).prop('id');
-                var firstIdx = id.indexOf('--');
-                index = id.substring(0, firstIdx);
-                var secondIdx = id.indexOf('--', firstIdx + 1);
-                type = id.substring(firstIdx + 2, secondIdx);
-                state = {
-                    index: index,
-                    type: type,
-                    fields: []
-                };
-            }
-            // loop through the facets
-            for (var n = 0; n < facet.childNodes.length; n++) {
-                var node = facet.childNodes[n];
-                // the first node is the title of the checkbox list: create the field in the state object
-                if (n === 0) {
-                    var parentId = node.parentElement.id;
-                    fieldObject = {
-                        field: parentId.substring(parentId.lastIndexOf('--') + 2, parentId.length),
-                        type: 'text',
-                        values: []
-                    };
-                    state.fields.push(fieldObject);
-                    addedFieldValue = false;
-                } else {
-                    // capture only those values that need to be used for the filter query
-                    var input = $(node).find('input');
-                    if (input.length > 0) {
-                        var idCb = $(input).prop('id');
-                        var from = $(document.getElementById(idCb)).val();
-                        var idTo = idCb.replace('_from','_to');
-                        var to = $(document.getElementById(idTo)).val();
-                        switch ($(input).prop('type')) {
-                            case 'checkbox':
-                                if ($(input).prop('checked')) {
-                                    state.fields[state.fields.length - 1].values.push(idCb.substr(idCb.lastIndexOf('--') + 2).replace(/@%/g,' '));
-                                    addedFieldValue = true;
-                                }
-                                break;
-                            case 'text':
-                                state.fields[state.fields.length - 1].type = 'number';
-                                state.fields[state.fields.length - 1].values.push(Number(from));
-                                state.fields[state.fields.length - 1].values.push(Number(to));
-                                addedFieldValue = true;
-                                break;
-                            case 'date':
-                                state.fields[state.fields.length - 1].type = 'date';
-                                state.fields[state.fields.length - 1].values.push(new Date(from).getTime());
-                                state.fields[state.fields.length - 1].values.push(new Date(to).getTime());
-                                addedFieldValue = true;
-                                break;
-                        }
-                    }
-                }
-            }
-            if (!addedFieldValue) {
-                // remove the field node as we don't need to filter on it since no values are selected
-                state.fields.pop();
-            }
-        }
-
-        // submit another search with the selected filters
-        setPopupSubTableHidden();
-        updateResults({
-            indexName: state.index,
-            indexType: state.type,
-            indexField: $('#indexField').prop('name'),
-            strSearch: $('#strSearch').val(),
-            filters: JSON.stringify(state),
-            sort: sort,
-            first: false
-        });
-    };
-
-    function manageSliderUpdate() {
-        // since the events are set to the change event, it's not capturing a lot of intermediate steps
-        // so this timeout is not super necessary and timeout is reduced to 50 miliseconds
-        window.clearTimeout(timer);
-        timer = window.setTimeout(doUpdate, 50);
     }
 
     // if this update is from a slider, delay the update as subsequent updates might come in
     if (delay) {
-        manageSliderUpdate();
+        manageSliderUpdate(sort);
     } else if (!delay && delay !== undefined) {
-        doUpdate();
+        doUpdate(sort);
     }
+}
+
+function manageSliderUpdate(sort) {
+    // since the events are set to the change event, it's not capturing a lot of intermediate steps
+    // so this timeout is not super necessary and timeout is reduced to 50 miliseconds
+    window.clearTimeout(timer);
+    timer = window.setTimeout(doUpdate(sort), 50);
+}
+
+function doUpdate(sort) {
+    // loop through the facets and capture the state
+    var index = '';
+    var type = '';
+    var state = [];
+    var addedFieldValue = false;
+    var fieldObject = {};
+    // get all the UI facets
+    var facets = $('#facets').find('li');
+    for (var f = 0; f < facets.length; f++) {
+        var facet = facets[f];
+        // only 1x capture the index and type so that we know how to resubmit the search
+        if (f === 0) {
+            var id = $(facet).prop('id');
+            var firstIdx = id.indexOf('--');
+            index = id.substring(0, firstIdx);
+            var secondIdx = id.indexOf('--', firstIdx + 1);
+            type = id.substring(firstIdx + 2, secondIdx);
+            state = {
+                index: index,
+                type: type,
+                fields: []
+            };
+        }
+        // loop through the facets
+        for (var n = 0; n < facet.childNodes.length; n++) {
+            var node = facet.childNodes[n];
+            // the first node is the title of the checkbox list: create the field in the state object
+            if (n === 0) {
+                var parentId = node.parentElement.id;
+                fieldObject = {
+                    field: parentId.substring(parentId.lastIndexOf('--') + 2, parentId.length),
+                    type: 'text',
+                    values: []
+                };
+                state.fields.push(fieldObject);
+                addedFieldValue = false;
+            } else {
+                // capture only those values that need to be used for the filter query
+                var input = $(node).find('input');
+                if (input.length > 0) {
+                    var idCb = $(input).prop('id');
+                    var from = $(document.getElementById(idCb)).val();
+                    var idTo = idCb.replace('_from', '_to');
+                    var to = $(document.getElementById(idTo)).val();
+                    switch ($(input).prop('type')) {
+                        case 'checkbox':
+                            if ($(input).prop('checked')) {
+                                state.fields[state.fields.length - 1].values.push(idCb.substr(idCb.lastIndexOf('--') + 2).replace(/@%/g, ' '));
+                                addedFieldValue = true;
+                            }
+                            break;
+                        case 'text':
+                            state.fields[state.fields.length - 1].type = 'number';
+                            state.fields[state.fields.length - 1].values.push(Number(from));
+                            state.fields[state.fields.length - 1].values.push(Number(to));
+                            addedFieldValue = true;
+                            break;
+                        case 'date':
+                            state.fields[state.fields.length - 1].type = 'date';
+                            state.fields[state.fields.length - 1].values.push(new Date(from).getTime());
+                            state.fields[state.fields.length - 1].values.push(new Date(to).getTime());
+                            addedFieldValue = true;
+                            break;
+                    }
+                }
+            }
+        }
+        if (!addedFieldValue) {
+            // remove the field node as we don't need to filter on it since no values are selected
+            state.fields.pop();
+        }
+    }
+
+    // submit another search with the selected filters
+    setPopupSubTableHidden();
+    updateResults({
+        indexName: state.index,
+        indexType: state.type,
+        indexField: $('#indexField').prop('name'),
+        strSearch: $('#strSearch').val(),
+        filters: JSON.stringify(state),
+        sort: sort,
+        first: false
+    });
 }
 
 function makeTable() {
@@ -592,13 +700,6 @@ function doSort(column) {
     updateResultsWithFilter(false, sort);
 }
 
-/**
- * Showing/hiding facets
- */
-function moreOrLess() {
-    console.log(this);
-    console.log(e);
-}
 
 /**
  * Showing/hiding subtables
